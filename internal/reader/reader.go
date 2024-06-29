@@ -10,8 +10,13 @@ import (
 
 // ReadRequests reads the CSV files and sends the data into the given channel.
 func ReadRequests(path string, output chan<- []string) {
-	var filenames []string
+	defer close(output)
 
+	if path == "" {
+		return
+	}
+
+	var filenames []string
 	if isDir(path) {
 		filenames = readFilenames(path)
 	} else {
@@ -21,7 +26,7 @@ func ReadRequests(path string, output chan<- []string) {
 	for _, filename := range filenames {
 		file, err := os.Open(filename)
 		if err != nil {
-			log.Fatal("cannot read the given input file")
+			log.Fatalln("cannot read the given input file:", err)
 		}
 
 		scanner := bufio.NewScanner(file)
@@ -32,14 +37,12 @@ func ReadRequests(path string, output chan<- []string) {
 
 		closeFile(file)
 	}
-
-	close(output)
 }
 
 func readFilenames(dir string) []string {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("cannot read the directory:", err)
 	}
 	var filenames []string
 	for _, entry := range entries {
@@ -54,7 +57,7 @@ func readFilenames(dir string) []string {
 func isDir(path string) bool {
 	stat, err := os.Stat(path)
 	if err != nil {
-		log.Fatal("cannot read the given input files")
+		log.Fatalln("cannot read the given input files:", err)
 	}
 	return stat.IsDir()
 }
@@ -62,6 +65,6 @@ func isDir(path string) bool {
 func closeFile(f *os.File) {
 	err := f.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("cannot close a file:", err)
 	}
 }

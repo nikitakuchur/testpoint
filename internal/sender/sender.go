@@ -3,8 +3,8 @@ package sender
 import "restcompare/internal/transformer"
 
 type Response struct {
-	request  transformer.Request
-	response string
+	Request  transformer.Request
+	Response string
 }
 
 func SendRequests(input <-chan transformer.Request, output chan<- Response) {
