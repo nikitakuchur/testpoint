@@ -31,7 +31,7 @@ func main() {
 	headerPtr := flag.Bool("header", false, "enable this flag is your CSV file has a header")
 	workPtr := flag.Int("w", 1, "a number of workers to send requests")
 	hostsPtr := flag.String("hosts", "", "a list of hosts to send requests to")
-	outputPtr := flag.String("output", "./output", "a directory where the output files need to be saved")
+	outputPtr := flag.String("output", "./", "a directory where the output files need to be saved")
 
 	flag.Parse()
 
@@ -48,15 +48,9 @@ func main() {
 	log.Println(conf)
 	log.Println("starting to process the requests...")
 
-	rowCh := make(chan []string)
-	go reader.ReadRequests(conf.input, rowCh)
-
-	requestCh := make(chan transformer.Request)
-	go transformer.TransformRequests(hosts, transform, rowCh, requestCh)
-
-	responseCh := make(chan sender.Response)
-	go sender.SendRequests(requestCh, responseCh)
-
+	rowCh := reader.ReadRequests(conf.input)
+	requestCh := transformer.TransformRequests(hosts, transform, rowCh)
+	responseCh := sender.SendRequests(requestCh)
 	writer.WriteResponses(responseCh, conf.output)
 
 	log.Println("completed")

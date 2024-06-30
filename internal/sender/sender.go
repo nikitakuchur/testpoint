@@ -17,19 +17,25 @@ type Response struct {
 
 // SendRequests takes requests from the input channel, sends them to
 // the corresponding host, and puts the result in the output channel.
-func SendRequests(input <-chan transformer.Request, output chan<- Response) {
-	client := &http.Client{}
+func SendRequests(input <-chan transformer.Request) <-chan Response {
+	output := make(chan Response)
 
-	for req := range input {
-		body, err := sendRequest(client, req)
-		if err != nil {
-			log.Println(req, err)
-			continue
+	go func() {
+		client := &http.Client{}
+
+		for req := range input {
+			body, err := sendRequest(client, req)
+			if err != nil {
+				log.Println(req, err)
+				continue
+			}
+			output <- Response{req, body}
 		}
 
-		output <- Response{req, body}
-	}
-	close(output)
+		close(output)
+	}()
+
+	return output
 }
 
 func sendRequest(client *http.Client, req transformer.Request) (string, error) {

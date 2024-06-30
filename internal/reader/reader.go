@@ -1,42 +1,51 @@
 package reader
 
 import (
-	"bufio"
+	"encoding/csv"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
-// ReadRequests reads the CSV files and sends the data into the given channel.
-func ReadRequests(path string, output chan<- []string) {
-	defer close(output)
+// ReadRequests reads the CSV files and sends the data to the output channel.
+func ReadRequests(path string) <-chan []string {
+	output := make(chan []string)
 
-	if path == "" {
-		return
-	}
+	go func() {
+		defer close(output)
 
-	var filenames []string
-	if isDir(path) {
-		filenames = readFilenames(path)
-	} else {
-		filenames = append(filenames, path)
-	}
-
-	for _, filename := range filenames {
-		file, err := os.Open(filename)
-		if err != nil {
-			log.Fatalln("cannot read the given input file:", err)
+		if path == "" {
+			return
 		}
 
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			row := strings.Split(scanner.Text(), ",")
-			output <- row
+		var filenames []string
+		if isDir(path) {
+			filenames = readFilenames(path)
+		} else {
+			filenames = append(filenames, path)
 		}
 
-		closeFile(file)
-	}
+		for _, filename := range filenames {
+			file, err := os.Open(filename)
+			if err != nil {
+				log.Fatalln("cannot read the given input file:", err)
+			}
+
+			reader := csv.NewReader(file)
+			for {
+				rec, err := reader.Read()
+				if err == io.EOF {
+					break
+				}
+				output <- rec
+			}
+
+			closeFile(file)
+		}
+	}()
+
+	return output
 }
 
 func readFilenames(dir string) []string {
