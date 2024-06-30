@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"restcompare/internal/transformer"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -17,21 +18,31 @@ type Response struct {
 
 // SendRequests takes requests from the input channel, sends them to
 // the corresponding host, and puts the result in the output channel.
-func SendRequests(input <-chan transformer.Request) <-chan Response {
+func SendRequests(input <-chan transformer.Request, workers int) <-chan Response {
 	output := make(chan Response)
 
-	go func() {
-		client := &http.Client{}
+	client := &http.Client{}
 
-		for req := range input {
-			body, err := sendRequest(client, req)
-			if err != nil {
-				log.Println(req, err)
-				continue
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			for req := range input {
+				body, err := sendRequest(client, req)
+				if err != nil {
+					log.Println(req, err)
+					continue
+				}
+				output <- Response{req, body}
 			}
-			output <- Response{req, body}
-		}
+		}()
+	}
 
+	// this goroutine closes the channel
+	go func() {
+		wg.Wait()
 		close(output)
 	}()
 
