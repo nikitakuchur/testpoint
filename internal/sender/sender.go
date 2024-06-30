@@ -43,8 +43,10 @@ func sendRequest(client *http.Client, req transformer.Request) (string, error) {
 	if err != nil {
 		return "", errors.New("cannot create an http request: " + err.Error())
 	}
-	httpReq.Header.Set("Content-Type", "application/json")
-	// TODO: add headers from the input file
+
+	for k, v := range req.Headers {
+		httpReq.Header.Set(k, v)
+	}
 
 	resp, err := doRequest(client, httpReq, 5)
 	if err != nil {

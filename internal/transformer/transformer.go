@@ -5,7 +5,7 @@ import "restcompare/internal/reader"
 type Request struct {
 	Url     string
 	Method  string
-	Headers string
+	Headers map[string]string
 	Body    string
 }
 
