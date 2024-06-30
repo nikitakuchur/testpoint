@@ -50,7 +50,7 @@ func main() {
 
 	rowCh := reader.ReadRequests(conf.input, conf.withHeader)
 	requestCh := transformer.TransformRequests(hosts, transform, rowCh)
-	responseCh := sender.SendRequests(requestCh, conf.workers*10)
+	responseCh := sender.SendRequests(requestCh, conf.workers)
 	writer.WriteResponses(responseCh, conf.output)
 
 	log.Println("completed")
