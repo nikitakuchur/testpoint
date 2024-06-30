@@ -12,23 +12,23 @@ import (
 )
 
 type config struct {
-	input   string
-	header  bool
-	workers int
-	hosts   []string
-	output  string
+	input      string
+	withHeader bool
+	workers    int
+	hosts      []string
+	output     string
 }
 
 func (c config) String() string {
 	return fmt.Sprintf(
 		"intput: \"%v\", header: %v, workers: %v, hosts: %v, output: \"%v\"",
-		c.input, c.header, c.workers, c.hosts, c.output,
+		c.input, c.withHeader, c.workers, c.hosts, c.output,
 	)
 }
 
 func main() {
 	inputPtr := flag.String("input", "", "a CSV file or directory with CSV files")
-	headerPtr := flag.Bool("header", false, "enable this flag is your CSV file has a header")
+	headerPtr := flag.Bool("header", false, "enable this flag if your CSV file has a header")
 	workPtr := flag.Int("w", 1, "a number of workers to send requests")
 	hostsPtr := flag.String("hosts", "", "a list of hosts to send requests to")
 	outputPtr := flag.String("output", "./", "a directory where the output files need to be saved")
@@ -48,7 +48,7 @@ func main() {
 	log.Println(conf)
 	log.Println("starting to process the requests...")
 
-	rowCh := reader.ReadRequests(conf.input)
+	rowCh := reader.ReadRequests(conf.input, conf.withHeader)
 	requestCh := transformer.TransformRequests(hosts, transform, rowCh)
 	responseCh := sender.SendRequests(requestCh)
 	writer.WriteResponses(responseCh, conf.output)
@@ -57,8 +57,8 @@ func main() {
 	log.Printf("the result is saved in %v", conf.output)
 }
 
-func transform(url string, row []string) transformer.Request {
-	return transformer.Request{Url: url + row[1], Method: row[0]}
+func transform(url string, rec reader.Record) transformer.Request {
+	return transformer.Request{Url: url + rec.Values[1], Method: rec.Values[0]}
 }
 
 func parseHosts(hosts string) []string {

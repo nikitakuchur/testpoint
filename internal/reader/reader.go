@@ -8,9 +8,14 @@ import (
 	"path/filepath"
 )
 
+type Record struct {
+	Header []string
+	Values []string
+}
+
 // ReadRequests reads the CSV files and sends the data to the output channel.
-func ReadRequests(path string) <-chan []string {
-	output := make(chan []string)
+func ReadRequests(path string, withHeader bool) <-chan Record {
+	output := make(chan Record)
 
 	go func() {
 		defer close(output)
@@ -19,12 +24,7 @@ func ReadRequests(path string) <-chan []string {
 			return
 		}
 
-		var filenames []string
-		if isDir(path) {
-			filenames = readFilenames(path)
-		} else {
-			filenames = append(filenames, path)
-		}
+		filenames := readFilenames(path)
 
 		for _, filename := range filenames {
 			file, err := os.Open(filename)
@@ -33,12 +33,21 @@ func ReadRequests(path string) <-chan []string {
 			}
 
 			reader := csv.NewReader(file)
+
+			var header []string = nil
+			if withHeader {
+				header, err = reader.Read()
+				if err != nil {
+					log.Fatalln("cannot read the header of the input file")
+				}
+			}
+
 			for {
 				rec, err := reader.Read()
 				if err == io.EOF {
 					break
 				}
-				output <- rec
+				output <- Record{header, rec}
 			}
 
 			closeFile(file)
@@ -48,18 +57,26 @@ func ReadRequests(path string) <-chan []string {
 	return output
 }
 
-func readFilenames(dir string) []string {
-	entries, err := os.ReadDir(dir)
+func readFilenames(path string) []string {
+	var filenames []string
+
+	if !isDir(path) {
+		filenames = append(filenames, path)
+		return filenames
+	}
+
+	entries, err := os.ReadDir(path)
 	if err != nil {
 		log.Fatalln("cannot read the directory:", err)
 	}
-	var filenames []string
+
 	for _, entry := range entries {
 		if !entry.IsDir() {
-			filename := filepath.Join(dir, entry.Name())
+			filename := filepath.Join(path, entry.Name())
 			filenames = append(filenames, filename)
 		}
 	}
+
 	return filenames
 }
 

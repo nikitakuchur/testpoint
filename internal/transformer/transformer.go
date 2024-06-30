@@ -1,5 +1,7 @@
 package transformer
 
+import "restcompare/internal/reader"
+
 type Request struct {
 	Url     string
 	Method  string
@@ -7,9 +9,11 @@ type Request struct {
 	Body    string
 }
 
-// TransformRequests reads from the input channel raw request data,
-// transforms it into requests using the given transformer and sends it to the output channel.
-func TransformRequests(hosts []string, transformer func(string, []string) Request, input <-chan []string) <-chan Request {
+type Transformation func(string, reader.Record) Request
+
+// TransformRequests reads raw request data from the input channel,
+// transforms it into requests using the given transformation and sends it to the output channel.
+func TransformRequests(hosts []string, transformation Transformation, input <-chan reader.Record) <-chan Request {
 	output := make(chan Request)
 
 	go func() {
@@ -19,9 +23,9 @@ func TransformRequests(hosts []string, transformer func(string, []string) Reques
 			return
 		}
 
-		for row := range input {
+		for rec := range input {
 			for _, url := range hosts {
-				req := transformer(url, row)
+				req := transformation(url, rec)
 				output <- req
 			}
 		}
