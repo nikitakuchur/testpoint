@@ -1,7 +1,7 @@
 package writer
 
 import (
-	"fmt"
+	"encoding/csv"
 	"log"
 	"net/url"
 	"os"
@@ -9,15 +9,14 @@ import (
 	"restcompare/internal/sender"
 )
 
+// WriteResponses creates files for each unique host and writes the results in them.
 func WriteResponses(input <-chan sender.Response, dir string) {
 	fileMap := make(map[string]*os.File)
+	writerMap := make(map[string]*csv.Writer)
 
 	defer func() {
-		for _, file := range fileMap {
-			err := file.Sync()
-			if err != nil {
-				log.Fatalln("cannot sync a file:", err)
-			}
+		for k, file := range fileMap {
+			writerMap[k].Flush()
 			closeFile(file)
 		}
 	}()
@@ -29,23 +28,32 @@ func WriteResponses(input <-chan sender.Response, dir string) {
 		}
 
 		file, ok := fileMap[u.Host]
+		writer := writerMap[u.Host]
 		if !ok {
 			path := filepath.Join(dir, u.Host+".csv")
-			file, err = os.Create(path)
-			if err != nil {
-				log.Fatalln("cannot create a new file:", err)
-			}
+			file = createFile(path)
+
 			fileMap[u.Host] = file
-			writeLine(file, "url,response\n")
+			writer = csv.NewWriter(file)
+			writerMap[u.Host] = writer
+
+			writeLine(writer, []string{"url", "response"})
 		}
 
-		line := fmt.Sprintf("%v,%v\n", res.Request.Url, res.Response)
-		writeLine(file, line)
+		writeLine(writer, []string{res.Request.Url, res.Response})
 	}
 }
 
-func writeLine(file *os.File, line string) {
-	_, err := file.WriteString(line)
+func createFile(path string) *os.File {
+	file, err := os.Create(path)
+	if err != nil {
+		log.Fatalln("cannot create a new file:", err)
+	}
+	return file
+}
+
+func writeLine(writer *csv.Writer, record []string) {
+	err := writer.Write(record)
 	if err != nil {
 		log.Fatalln("cannot write into a file:", err)
 	}
