@@ -48,10 +48,10 @@ func main() {
 	log.Println(conf)
 	log.Println("starting to process the requests...")
 
-	rowCh := reader.ReadRequests(conf.input, conf.withHeader)
-	requestCh := transformer.TransformRequests(hosts, transformer.DefaultTransformation, rowCh)
-	responseCh := sender.SendRequests(requestCh, conf.workers)
-	writer.WriteResponses(responseCh, conf.output)
+	records := reader.ReadRequests(conf.input, conf.withHeader)
+	requests := transformer.TransformRequests(hosts, records, transformer.DefaultTransformation)
+	responses := sender.SendRequests(requests, conf.workers)
+	writer.WriteResponses(responses, conf.output)
 
 	log.Println("completed")
 	log.Printf("the result is saved in %v", conf.output)

@@ -2,6 +2,7 @@ package writer
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"log"
 	"net/url"
 	"os"
@@ -10,7 +11,7 @@ import (
 )
 
 // WriteResponses creates files for each unique host and writes the results in them.
-func WriteResponses(input <-chan sender.Response, dir string) {
+func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 	fileMap := make(map[string]*os.File)
 	writerMap := make(map[string]*csv.Writer)
 
@@ -21,8 +22,8 @@ func WriteResponses(input <-chan sender.Response, dir string) {
 		}
 	}()
 
-	for res := range input {
-		u, err := url.Parse(res.Request.Url)
+	for rr := range input {
+		u, err := url.Parse(rr.Request.Url)
 		if err != nil {
 			log.Fatalln("cannot parse a URL:", err)
 		}
@@ -37,11 +38,28 @@ func WriteResponses(input <-chan sender.Response, dir string) {
 			writer = csv.NewWriter(file)
 			writerMap[u.Host] = writer
 
-			writeLine(writer, []string{"url", "response"})
+			writeLine(writer, []string{
+				"request_url", "request_method", "request_headers", "request_body",
+				"response_status", "response_body",
+			})
 		}
 
-		writeLine(writer, []string{res.Request.Url, res.Response})
+		writeLine(writer, []string{
+			rr.Request.Url, rr.Request.Method, marshalHeaders(rr.Request.Headers), rr.Request.Body,
+			rr.Response.Status, rr.Response.Body,
+		})
 	}
+}
+
+func marshalHeaders(headers map[string]string) string {
+	if len(headers) == 0 {
+		return ""
+	}
+	bytes, err := json.Marshal(headers)
+	if err != nil {
+		log.Fatalln("cannot marshal headers:", err)
+	}
+	return string(bytes)
 }
 
 func createFile(path string) *os.File {

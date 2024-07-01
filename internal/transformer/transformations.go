@@ -5,13 +5,14 @@ import (
 	"log"
 	"strings"
 	"testpoint/internal/reader"
+	"testpoint/internal/sender"
 )
 
 // DefaultTransformation transforms a raw record to an HTTP request.
 // If we don't have a header in the CSV file, the transformation expects the data to be in the following order:
 // URL (without the host), HTTP method, headers (in JSON format), body.
 // If we do have a header, then it will look for these fields: url, method, headers, and body.
-func DefaultTransformation(url string, rec reader.Record) Request {
+func DefaultTransformation(url string, rec reader.Record) sender.Request {
 	params := map[string]string{}
 	if rec.Fields != nil {
 		// we have a header and we can use it
@@ -25,7 +26,11 @@ func DefaultTransformation(url string, rec reader.Record) Request {
 		params["body"] = getValue(rec.Values, 3)
 	}
 
-	return Request{
+	if params["method"] == "" {
+		params["method"] = "GET"
+	}
+
+	return sender.Request{
 		Url:     url + params["url"],
 		Method:  params["method"],
 		Headers: parseHeaders(params["headers"]),

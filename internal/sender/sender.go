@@ -7,19 +7,30 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"testpoint/internal/transformer"
 	"time"
 )
 
+type Request struct {
+	Url     string
+	Method  string
+	Headers map[string]string
+	Body    string
+}
+
 type Response struct {
-	Request  transformer.Request
-	Response string
+	Status string
+	Body   string
+}
+
+type RequestResponse struct {
+	Request  Request
+	Response Response
 }
 
 // SendRequests takes requests from the input channel, sends them to
 // the corresponding host, and puts the result in the output channel.
-func SendRequests(input <-chan transformer.Request, workers int) <-chan Response {
-	output := make(chan Response)
+func SendRequests(input <-chan Request, workers int) <-chan RequestResponse {
+	output := make(chan RequestResponse)
 
 	client := &http.Client{}
 
@@ -30,12 +41,12 @@ func SendRequests(input <-chan transformer.Request, workers int) <-chan Response
 			defer wg.Done()
 
 			for req := range input {
-				body, err := sendRequest(client, req)
+				resp, err := sendRequest(client, req)
 				if err != nil {
 					log.Println(req, err)
 					continue
 				}
-				output <- Response{req, body}
+				output <- RequestResponse{req, resp}
 			}
 		}()
 	}
@@ -49,10 +60,10 @@ func SendRequests(input <-chan transformer.Request, workers int) <-chan Response
 	return output
 }
 
-func sendRequest(client *http.Client, req transformer.Request) (string, error) {
+func sendRequest(client *http.Client, req Request) (Response, error) {
 	httpReq, err := http.NewRequest(req.Method, req.Url, strings.NewReader(req.Body))
 	if err != nil {
-		return "", errors.New("cannot create an http request: " + err.Error())
+		return Response{}, errors.New("cannot create an http request: " + err.Error())
 	}
 
 	for k, v := range req.Headers {
@@ -61,16 +72,16 @@ func sendRequest(client *http.Client, req transformer.Request) (string, error) {
 
 	resp, err := doRequest(client, httpReq, 5)
 	if err != nil {
-		return "", err
+		return Response{}, err
 	}
 	defer closeResponse(resp)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", errors.New("cannot read an http body: " + err.Error())
+		return Response{}, errors.New("cannot read an http body: " + err.Error())
 	}
 
-	return string(body), nil
+	return Response{resp.Status, string(body)}, nil
 }
 
 func doRequest(client *http.Client, req *http.Request, retries int) (*http.Response, error) {

@@ -1,20 +1,16 @@
 package transformer
 
-import "testpoint/internal/reader"
+import (
+	"testpoint/internal/reader"
+	"testpoint/internal/sender"
+)
 
-type Request struct {
-	Url     string
-	Method  string
-	Headers map[string]string
-	Body    string
-}
-
-type Transformation func(string, reader.Record) Request
+type Transformation func(string, reader.Record) sender.Request
 
 // TransformRequests reads raw request data from the input channel,
 // transforms it into requests using the given transformation and sends it to the output channel.
-func TransformRequests(hosts []string, transformation Transformation, input <-chan reader.Record) <-chan Request {
-	output := make(chan Request)
+func TransformRequests(hosts []string, input <-chan reader.Record, transformation Transformation) <-chan sender.Request {
+	output := make(chan sender.Request)
 
 	go func() {
 		defer close(output)
