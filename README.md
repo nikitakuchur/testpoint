@@ -1,6 +1,6 @@
-# Restcompare
+# Testpoint
 
-**Restcompare** is a simple CLI testing tool written in Go that can help you ensure that your endpoints work 
+**Testpoint** is a simple CLI testing tool written in Go that can help you ensure that your endpoints work 
 as expected after major refactoring or migration to a new version of your favourite framework.
 
 The tool has two main features:
@@ -27,7 +27,7 @@ That's when I came up with the idea for this tool.
 
 ## When you should use it
 
-Restcompare can be useful in the following cases:
+Testpoint can be useful in the following cases:
 * You've made significant changes that don't alter the behaviour of the endpoints in question, 
   and you need to test that they still work as expected.
 * You've rewritten a legacy application, and you need to ensure that the endpoints respond in exactly the same way.

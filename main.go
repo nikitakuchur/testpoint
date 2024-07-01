@@ -4,11 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"restcompare/internal/reader"
-	"restcompare/internal/sender"
-	"restcompare/internal/transformer"
-	"restcompare/internal/writer"
 	"strings"
+	"testpoint/internal/reader"
+	"testpoint/internal/sender"
+	"testpoint/internal/transformer"
+	"testpoint/internal/writer"
 )
 
 type config struct {

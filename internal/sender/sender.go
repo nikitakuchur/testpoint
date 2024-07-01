@@ -5,9 +5,9 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"restcompare/internal/transformer"
 	"strings"
 	"sync"
+	"testpoint/internal/transformer"
 	"time"
 )
 

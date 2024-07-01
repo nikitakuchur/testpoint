@@ -1,6 +1,6 @@
 package transformer
 
-import "restcompare/internal/reader"
+import "testpoint/internal/reader"
 
 type Request struct {
 	Url     string

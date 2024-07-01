@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"restcompare/internal/sender"
+	"testpoint/internal/sender"
 )
 
 // WriteResponses creates files for each unique host and writes the results in them.
