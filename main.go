@@ -49,16 +49,12 @@ func main() {
 	log.Println("starting to process the requests...")
 
 	rowCh := reader.ReadRequests(conf.input, conf.withHeader)
-	requestCh := transformer.TransformRequests(hosts, transform, rowCh)
+	requestCh := transformer.TransformRequests(hosts, transformer.DefaultTransformation, rowCh)
 	responseCh := sender.SendRequests(requestCh, conf.workers)
 	writer.WriteResponses(responseCh, conf.output)
 
 	log.Println("completed")
 	log.Printf("the result is saved in %v", conf.output)
-}
-
-func transform(url string, rec reader.Record) transformer.Request {
-	return transformer.Request{Url: url + rec.Values[1], Method: rec.Values[0]}
 }
 
 func parseHosts(hosts string) []string {

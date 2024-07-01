@@ -9,7 +9,7 @@ import (
 )
 
 type Record struct {
-	Header []string
+	Fields []string
 	Values []string
 }
 
