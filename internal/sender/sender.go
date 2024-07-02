@@ -1,6 +1,7 @@
 package sender
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"log"
@@ -13,7 +14,7 @@ import (
 type Request struct {
 	Url     string
 	Method  string
-	Headers map[string]string
+	Headers string
 	Body    string
 }
 
@@ -28,7 +29,7 @@ type RequestResponse struct {
 }
 
 // SendRequests takes requests from the input channel, sends them to
-// the corresponding host, and puts the result in the output channel.
+// the corresponding endpoint, and puts the result in the output channel.
 func SendRequests(input <-chan Request, workers int) <-chan RequestResponse {
 	output := make(chan RequestResponse)
 
@@ -66,7 +67,13 @@ func sendRequest(client *http.Client, req Request) (Response, error) {
 		return Response{}, errors.New("cannot create an http request: " + err.Error())
 	}
 
-	for k, v := range req.Headers {
+	headersMap := map[string]string{}
+	err = json.Unmarshal([]byte(req.Headers), &headersMap)
+	if err != nil {
+		return Response{}, errors.New("cannot convert headers to a map")
+	}
+
+	for k, v := range headersMap {
 		httpReq.Header.Set(k, v)
 	}
 

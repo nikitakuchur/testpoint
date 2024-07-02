@@ -14,23 +14,25 @@ import (
 type config struct {
 	input      string
 	withHeader bool
-	workers    int
 	hosts      []string
+	transform  string
+	workers    int
 	output     string
 }
 
 func (c config) String() string {
 	return fmt.Sprintf(
-		"intput: \"%v\", header: %v, workers: %v, hosts: %v, output: \"%v\"",
-		c.input, c.withHeader, c.workers, c.hosts, c.output,
+		"intput: \"%v\", header: %v, hosts: %v, transform: %v, workers: %v, output: \"%v\"",
+		c.input, c.withHeader, c.hosts, c.transform, c.workers, c.output,
 	)
 }
 
 func main() {
 	inputPtr := flag.String("input", "", "a CSV file or directory with CSV files")
 	headerPtr := flag.Bool("header", false, "enable this flag if your CSV file has a header")
-	workPtr := flag.Int("w", 1, "a number of workers to send requests")
 	hostsPtr := flag.String("hosts", "", "a list of hosts to send requests to")
+	transformPtr := flag.String("transform", "", "a JavaScript file with a request transformation")
+	workPtr := flag.Int("w", 1, "a number of workers to send requests")
 	outputPtr := flag.String("output", "./", "a directory where the output files need to be saved")
 
 	flag.Parse()
@@ -40,8 +42,9 @@ func main() {
 	conf := config{
 		*inputPtr,
 		*headerPtr,
-		*workPtr,
 		hosts,
+		*transformPtr,
+		*workPtr,
 		*outputPtr,
 	}
 
@@ -49,7 +52,13 @@ func main() {
 	log.Println("starting to process the requests...")
 
 	records := reader.ReadRequests(conf.input, conf.withHeader)
-	requests := transformer.TransformRequests(hosts, records, transformer.DefaultTransformation)
+
+	transformation := transformer.DefaultTransformation
+	if conf.transform != "" {
+		transformation = transformer.NewTransformation(conf.transform)
+	}
+
+	requests := transformer.TransformRequests(hosts, records, transformation)
 	responses := sender.SendRequests(requests, conf.workers)
 	writer.WriteResponses(responses, conf.output)
 

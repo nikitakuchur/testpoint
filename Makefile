@@ -3,7 +3,7 @@
 .PHONY: build clean
 build:
 	go fmt ./...
-	go build -o ./bin/restcompare
+	go build -o ./bin/testpoint
 clean:
 	go clean
 	rm -rf ./bin

@@ -1,0 +1,6 @@
+request_url,request_method,request_headers,request_body,response_status,response_body
+http://localhost:8084/api/v1/words/test?prefix=test,POST,"{""test"":""123"",""test2"":""456""}",hello world!,405 ,"{""timestamp"":""2024-07-02T01:57:56.605+00:00"",""status"":405,""error"":""Method Not Allowed"",""path"":""/api/v1/words/test""}"
+http://localhost:8084/api/v1/words/test?prefix=space,GET,"{""test"":""123"",""test2"":""456""}",hello world!,405 ,"{""timestamp"":""2024-07-02T01:57:56.607+00:00"",""status"":405,""error"":""Method Not Allowed"",""path"":""/api/v1/words/test""}"
+http://localhost:8084/api/v1/words/test?prefix=dog,GET,"{""test"":""123"",""test2"":""456""}",hello world!,405 ,"{""timestamp"":""2024-07-02T01:57:56.608+00:00"",""status"":405,""error"":""Method Not Allowed"",""path"":""/api/v1/words/test""}"
+http://localhost:8084/api/v1/words/test?prefix=cat,GET,"{""test"":""123"",""test2"":""456""}",hello world!,405 ,"{""timestamp"":""2024-07-02T01:57:56.608+00:00"",""status"":405,""error"":""Method Not Allowed"",""path"":""/api/v1/words/test""}"
+http://localhost:8084/api/v1/words/test?prefix=tech,GET,"{""test"":""123"",""test2"":""456""}",hello world!,405 ,"{""timestamp"":""2024-07-02T01:57:56.610+00:00"",""status"":405,""error"":""Method Not Allowed"",""path"":""/api/v1/words/test""}"

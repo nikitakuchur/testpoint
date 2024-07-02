@@ -5,7 +5,7 @@ import (
 	"testpoint/internal/sender"
 )
 
-type Transformation func(string, reader.Record) sender.Request
+type Transformation func(host string, rec reader.Record) sender.Request
 
 // TransformRequests reads raw request data from the input channel,
 // transforms it into requests using the given transformation and sends it to the output channel.
@@ -20,8 +20,8 @@ func TransformRequests(hosts []string, input <-chan reader.Record, transformatio
 		}
 
 		for rec := range input {
-			for _, url := range hosts {
-				req := transformation(url, rec)
+			for _, host := range hosts {
+				req := transformation(host, rec)
 				output <- req
 			}
 		}

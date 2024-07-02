@@ -2,7 +2,6 @@ package writer
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"log"
 	"net/url"
 	"os"
@@ -45,21 +44,10 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 		}
 
 		writeLine(writer, []string{
-			rr.Request.Url, rr.Request.Method, marshalHeaders(rr.Request.Headers), rr.Request.Body,
+			rr.Request.Url, rr.Request.Method, rr.Request.Headers, rr.Request.Body,
 			rr.Response.Status, rr.Response.Body,
 		})
 	}
-}
-
-func marshalHeaders(headers map[string]string) string {
-	if len(headers) == 0 {
-		return ""
-	}
-	bytes, err := json.Marshal(headers)
-	if err != nil {
-		log.Fatalln("cannot marshal headers:", err)
-	}
-	return string(bytes)
 }
 
 func createFile(path string) *os.File {
