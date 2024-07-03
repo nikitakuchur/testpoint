@@ -32,7 +32,7 @@ func TransformRequests(userUrls []string, input <-chan reader.Record, transforma
 				if req.Method == "" {
 					req.Method = "GET"
 				}
-				req.Metadata = map[string]string{"userUrl": url}
+				req.UserUrl = url
 
 				output <- req
 			}

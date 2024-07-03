@@ -22,7 +22,7 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 	}()
 
 	for rr := range input {
-		userUrl := rr.Request.Metadata["userUrl"]
+		userUrl := rr.Request.UserUrl
 
 		file, ok := fileMap[userUrl]
 		writer := writerMap[userUrl]

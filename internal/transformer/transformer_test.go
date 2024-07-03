@@ -36,10 +36,10 @@ func TestTransformRequests(t *testing.T) {
 	}
 
 	expected := []sender.Request{
-		{Url: "http://test1.com/api/test1", Method: "GET"},
-		{Url: "http://test2.com/api/test1", Method: "GET"},
-		{Url: "http://test1.com/api/test2", Method: "GET"},
-		{Url: "http://test2.com/api/test2", Method: "GET"},
+		{Url: "http://test1.com/api/test1", Method: "GET", UserUrl: "http://test1.com"},
+		{Url: "http://test2.com/api/test1", Method: "GET", UserUrl: "http://test2.com"},
+		{Url: "http://test1.com/api/test2", Method: "GET", UserUrl: "http://test1.com"},
+		{Url: "http://test2.com/api/test2", Method: "GET", UserUrl: "http://test2.com"},
 	}
 
 	for _, req := range expected {

@@ -19,7 +19,7 @@ type Request struct {
 	Body    string
 
 	// for internal use
-	Metadata map[string]string
+	UserUrl string
 }
 
 func (r Request) String() string {
