@@ -48,6 +48,9 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 }
 
 func urlToFilename(url string) string {
+	if url == "" {
+		return "output.csv"
+	}
 	url = strings.ReplaceAll(url, "://", "-")
 	url = strings.ReplaceAll(url, ":", "-")
 	url = strings.ReplaceAll(url, "/", "-")

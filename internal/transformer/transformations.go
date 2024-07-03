@@ -130,6 +130,10 @@ func mergeUrls(requestUrl string, userUrl string) (string, error) {
 		return "", err
 	}
 
+	if userUrl == "" {
+		return requestUrl, nil
+	}
+
 	parsedUserUrl, err := url.Parse(userUrl)
 	if err != nil {
 		return "", err

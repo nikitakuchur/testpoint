@@ -287,6 +287,7 @@ func TestDefaultTransformationWithUrlMerging(t *testing.T) {
 		userUrl string
 		reqUrl  string
 	}{
+		{"no_user_req", "", "http://test.com/api/new?param=1&param=2"},
 		{"right_slash", "http://test.com", "/api/new?param=1&param=2"},
 		{"left_slash", "http://test.com/", "api/new?param=1&param=2"},
 		{"no_slashes", "http://test.com", "api/new?param=1&param=2"},
