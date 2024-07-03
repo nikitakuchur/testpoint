@@ -84,7 +84,7 @@ func TestReadRequestsWithEmptyFile(t *testing.T) {
 
 	actual := chanToSlice(records)
 	if len(actual) != 0 {
-		t.Error("incorrect result: expected slice size is 0, got", len(actual))
+		t.Error("incorrect result: expected number of records is 0, got", len(actual))
 	}
 }
 
@@ -102,7 +102,7 @@ url,method,headers,body,test
 
 	actual := chanToSlice(records)
 	if len(actual) != 0 {
-		t.Error("incorrect result: expected slice size is 0, got", len(actual))
+		t.Error("incorrect result: expected number of records is 0, got", len(actual))
 	}
 }
 
@@ -127,7 +127,7 @@ url,method,headers,body
 
 	actual := chanToSlice(records)
 	if len(actual) != 8 {
-		t.Error("incorrect result: expected slice size is 0, got", len(actual))
+		t.Error("incorrect result: expected number of records is 0, got", len(actual))
 	}
 
 	expected := []reader.Record{
@@ -156,7 +156,7 @@ func TestReadRequestsFromEmptyDir(t *testing.T) {
 
 	actual := chanToSlice(records)
 	if len(actual) != 0 {
-		t.Error("incorrect result: expected slice size is 0, got", len(actual))
+		t.Error("incorrect result: expected number of records is 0, got", len(actual))
 	}
 }
 
@@ -165,7 +165,7 @@ func TestReadRequestsFromNonexistentDir(t *testing.T) {
 
 	actual := chanToSlice(records)
 	if len(actual) != 0 {
-		t.Error("incorrect result: expected slice size is 0, got", len(actual))
+		t.Error("incorrect result: expected number of records is 0, got", len(actual))
 	}
 }
 

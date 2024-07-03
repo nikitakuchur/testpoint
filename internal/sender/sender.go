@@ -52,7 +52,7 @@ func SendRequests(input <-chan Request, workers int) <-chan RequestResponse {
 			for req := range input {
 				resp, err := sendRequest(client, req)
 				if err != nil {
-					log.Println(req, err)
+					log.Printf("%v: %v, request was skipped", req, err)
 					continue
 				}
 				output <- RequestResponse{req, resp}

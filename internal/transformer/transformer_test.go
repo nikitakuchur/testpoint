@@ -16,7 +16,7 @@ func TestTransformRequestsWithNoData(t *testing.T) {
 
 	var actual = chanToSet(requests)
 	if len(actual) != 0 {
-		t.Error("incorrect result: expected set size is 0, got", len(actual))
+		t.Error("incorrect result: expected number of requests is 0, got", len(actual))
 	}
 }
 
@@ -32,7 +32,7 @@ func TestTransformRequests(t *testing.T) {
 
 	var actual = chanToSet(requests)
 	if len(actual) != 4 {
-		t.Error("incorrect result: expected set size is 4, got", len(actual))
+		t.Error("incorrect result: expected number of requests is 4, got", len(actual))
 	}
 
 	expected := []sender.Request{
@@ -62,7 +62,7 @@ func TestTransformRequestsWithIncorrectRecords(t *testing.T) {
 
 	var actual = chanToSet(requests)
 	if len(actual) != 0 {
-		t.Error("incorrect result: expected set size is 0, got", len(actual))
+		t.Error("incorrect result: expected number of requests is 0, got", len(actual))
 	}
 }
 
