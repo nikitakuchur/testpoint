@@ -18,7 +18,7 @@ type Request struct {
 	Headers string
 	Body    string
 
-	// for internal use
+	// we're keeping it here to name the output files later
 	UserUrl string
 }
 

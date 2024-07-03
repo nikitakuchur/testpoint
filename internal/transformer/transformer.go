@@ -24,7 +24,7 @@ func TransformRequests(userUrls []string, input <-chan reader.Record, transforma
 			for _, url := range userUrls {
 				req, err := transformation(url, rec)
 				if err != nil {
-					log.Printf("%v: %v, the record was skipped", rec, err)
+					log.Printf("%v, %v: %v, the record was skipped", url, rec, err)
 					continue
 				}
 
