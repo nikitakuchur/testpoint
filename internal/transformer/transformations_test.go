@@ -1,6 +1,7 @@
 package transformer_test
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"testing"
 	"testpoint/internal/reader"
 	"testpoint/internal/sender"
@@ -32,8 +33,8 @@ function transform(host, record) {
 		Body:    "Hello world!",
 	}
 
-	if actual != expected {
-		t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Error(diff)
 	}
 }
 
@@ -63,8 +64,8 @@ function transform(host, record) {
 		Body:    "Hello world!",
 	}
 
-	if actual != expected {
-		t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Error(diff)
 	}
 }
 
@@ -95,8 +96,8 @@ function transform(host, record) {
 		Body:    "Hello world!",
 	}
 
-	if actual != expected {
-		t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Error(diff)
 	}
 }
 
@@ -166,9 +167,9 @@ function transform(host, record) {
 			actual, _ := transformation("http://test.com", record)
 
 			expected := sender.Request{}
-			if actual != expected {
+			if diff := cmp.Diff(expected, actual); diff != "" {
 				t.Error("failed script: ", d.script)
-				t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+				t.Error(diff)
 			}
 		})
 	}
@@ -245,8 +246,9 @@ func TestDefaultTransformation(t *testing.T) {
 			Headers: `{"test_header":"test_value"}`,
 			Body:    "Hello world!",
 		}
-		if actual != expected {
-			t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+
+		if diff := cmp.Diff(expected, actual); diff != "" {
+			t.Error(diff)
 		}
 	}
 }
@@ -265,8 +267,8 @@ func TestDefaultTransformationWithFields(t *testing.T) {
 		Headers: `{"test_header":"test_value"}`,
 		Body:    "Hello world!",
 	}
-	if actual != expected {
-		t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Error(diff)
 	}
 }
 
@@ -276,8 +278,8 @@ func TestDefaultTransformationWithEmptyRecord(t *testing.T) {
 	actual, _ := transformer.DefaultTransformation("http://test.com", record)
 
 	expected := sender.Request{Url: "http://test.com"}
-	if actual != expected {
-		t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Error(diff)
 	}
 }
 
@@ -305,8 +307,8 @@ func TestDefaultTransformationWithUrlMerging(t *testing.T) {
 			actual, _ := transformer.DefaultTransformation(d.userUrl, reader.Record{Values: []string{d.reqUrl}})
 
 			expected := sender.Request{Url: "http://test.com/api/new?param=1&param=2"}
-			if actual != expected {
-				t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+			if diff := cmp.Diff(expected, actual); diff != "" {
+				t.Error(diff)
 			}
 		})
 	}

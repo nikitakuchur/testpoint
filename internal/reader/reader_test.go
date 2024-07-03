@@ -1,6 +1,7 @@
 package reader_test
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"log"
 	"os"
 	"testing"
@@ -31,10 +32,8 @@ url,method,headers,body
 		{[]string{"url", "method", "headers", "body"}, []string{"/api/test?prefix=sp", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
 	}
 
-	for i, rec := range actual {
-		if rec.String() != expected[i].String() {
-			t.Errorf("incorrect result:\n expected: %v\n actual: %v", expected[i], rec)
-		}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Error(diff)
 	}
 }
 
@@ -61,10 +60,8 @@ func TestReadRequestsWithoutHeader(t *testing.T) {
 		{Values: []string{"/api/test?prefix=sp", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
 	}
 
-	for i, rec := range actual {
-		if rec.String() != expected[i].String() {
-			t.Errorf("incorrect result:\n expected: %v\n actual: %v", expected[i], rec)
-		}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Error(diff)
 	}
 }
 
@@ -142,10 +139,8 @@ url,method,headers,body
 		{[]string{"url", "method", "headers", "body"}, []string{"/api/test2?prefix=st", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
 	}
 
-	for i, rec := range actual {
-		if rec.String() != expected[i].String() {
-			t.Errorf("incorrect result:\n expected: %v\n actual: %v", expected[i], rec)
-		}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Error(diff)
 	}
 }
 

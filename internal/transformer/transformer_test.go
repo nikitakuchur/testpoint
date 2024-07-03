@@ -2,6 +2,7 @@ package transformer_test
 
 import (
 	"errors"
+	"github.com/google/go-cmp/cmp"
 	"testing"
 	"testpoint/internal/reader"
 	"testpoint/internal/sender"
@@ -14,7 +15,7 @@ func TestTransformRequestsWithNoData(t *testing.T) {
 
 	requests := transformer.TransformRequests(nil, records, testTransformation)
 
-	var actual = chanToSet(requests)
+	var actual = chanToSlice(requests)
 	if len(actual) != 0 {
 		t.Error("incorrect result: expected number of requests is 0, got", len(actual))
 	}
@@ -30,7 +31,7 @@ func TestTransformRequests(t *testing.T) {
 
 	requests := transformer.TransformRequests([]string{"http://test1.com", "http://test2.com"}, records, testTransformation)
 
-	var actual = chanToSet(requests)
+	var actual = chanToSlice(requests)
 	if len(actual) != 4 {
 		t.Error("incorrect result: expected number of requests is 4, got", len(actual))
 	}
@@ -42,11 +43,8 @@ func TestTransformRequests(t *testing.T) {
 		{Url: "http://test2.com/api/test2", Method: "GET", UserUrl: "http://test2.com"},
 	}
 
-	for _, req := range expected {
-		_, ok := actual[req]
-		if !ok {
-			t.Errorf("incorrect result: expected request %v not found", req)
-		}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Error(diff)
 	}
 }
 
@@ -60,7 +58,7 @@ func TestTransformRequestsWithIncorrectRecords(t *testing.T) {
 
 	requests := transformer.TransformRequests([]string{"http://test1.com", "http://test2.com"}, records, errorTransformation)
 
-	var actual = chanToSet(requests)
+	var actual = chanToSlice(requests)
 	if len(actual) != 0 {
 		t.Error("incorrect result: expected number of requests is 0, got", len(actual))
 	}
@@ -74,10 +72,10 @@ func errorTransformation(_ string, _ reader.Record) (sender.Request, error) {
 	return sender.Request{}, errors.New("error")
 }
 
-func chanToSet(input <-chan sender.Request) map[sender.Request]bool {
-	set := make(map[sender.Request]bool)
-	for r := range input {
-		set[r] = true
+func chanToSlice(input <-chan sender.Request) []sender.Request {
+	var slice []sender.Request
+	for req := range input {
+		slice = append(slice, req)
 	}
-	return set
+	return slice
 }
