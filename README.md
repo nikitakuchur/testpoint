@@ -23,7 +23,7 @@ This approach helped us catch many bugs that were quite difficult to detect othe
 
 After writing multiple Python scripts like that, I realised that we were wasting our time by doing the same work over and over again.
 Moreover, the scripts were quite slow (it was Python, after all), and we had to waste even more time waiting for them to finish.
-That's when I came up with the idea for this tool.
+That's why I decided to create Testpoint.
 
 ## When you should use it
 
@@ -32,5 +32,5 @@ Testpoint can be useful in the following cases:
   and you need to test that they still work as expected.
 * You've rewritten a legacy application, and you need to ensure that the endpoints respond in exactly the same way.
 
-> Note that not every REST endpoint is suitable for this kind of testing. If you want to test an endpoint, 
-> make sure that it's **idempotent** and **consistent**, i.e., it produces the same responses regardless of the order or number of requests.
+Note that not every REST endpoint is suitable for this kind of testing. If you want to test an endpoint, 
+make sure that it's **idempotent** and **consistent**, i.e., it produces the same responses regardless of the order or number of requests.

@@ -3,6 +3,7 @@ package sender
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -16,6 +17,13 @@ type Request struct {
 	Method  string
 	Headers string
 	Body    string
+
+	// for internal use
+	Metadata map[string]string
+}
+
+func (r Request) String() string {
+	return fmt.Sprintf("{%v %v %v %v}", r.Url, r.Method, r.Headers, r.Body)
 }
 
 type Response struct {

@@ -3,9 +3,9 @@ package writer
 import (
 	"encoding/csv"
 	"log"
-	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testpoint/internal/sender"
 )
 
@@ -22,20 +22,17 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 	}()
 
 	for rr := range input {
-		u, err := url.Parse(rr.Request.Url)
-		if err != nil {
-			log.Fatalln("cannot parse a URL:", err)
-		}
+		userUrl := rr.Request.Metadata["userUrl"]
 
-		file, ok := fileMap[u.Host]
-		writer := writerMap[u.Host]
+		file, ok := fileMap[userUrl]
+		writer := writerMap[userUrl]
 		if !ok {
-			path := filepath.Join(dir, u.Host+".csv")
+			path := filepath.Join(dir, urlToFilename(userUrl))
 			file = createFile(path)
 
-			fileMap[u.Host] = file
+			fileMap[userUrl] = file
 			writer = csv.NewWriter(file)
-			writerMap[u.Host] = writer
+			writerMap[userUrl] = writer
 
 			writeLine(writer, []string{
 				"request_url", "request_method", "request_headers", "request_body",
@@ -48,6 +45,14 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 			rr.Response.Status, rr.Response.Body,
 		})
 	}
+}
+
+func urlToFilename(url string) string {
+	url = strings.ReplaceAll(url, "://", "-")
+	url = strings.ReplaceAll(url, ":", "-")
+	url = strings.ReplaceAll(url, "/", "-")
+	url = strings.ReplaceAll(url, ".", "-")
+	return url + ".csv"
 }
 
 func createFile(path string) *os.File {

@@ -28,9 +28,12 @@ func TransformRequests(userUrls []string, input <-chan reader.Record, transforma
 					log.Printf("%v: %v, the record was skipped", rec, err)
 					continue outer
 				}
+
 				if req.Method == "" {
 					req.Method = "GET"
 				}
+				req.Metadata = map[string]string{"userUrl": url}
+
 				output <- req
 			}
 		}
