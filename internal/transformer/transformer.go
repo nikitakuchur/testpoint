@@ -22,6 +22,9 @@ func TransformRequests(hosts []string, input <-chan reader.Record, transformatio
 		for rec := range input {
 			for _, host := range hosts {
 				req := transformation(host, rec)
+				if req.Method == "" {
+					req.Method = "GET"
+				}
 				output <- req
 			}
 		}

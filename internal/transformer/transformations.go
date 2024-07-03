@@ -1,31 +1,33 @@
 package transformer
 
 import (
+	"errors"
 	"github.com/dop251/goja"
 	"log"
-	"os"
+	"net/url"
+	"reflect"
 	"strings"
 	"testpoint/internal/reader"
 	"testpoint/internal/sender"
 )
 
-// NewTransformation creates a new transformation from the given JavaScript file.
+// NewTransformation creates a new transformation from the given JavaScript code.
 // The script must have a function called transform that accepts a host and a CSV record, and returns an HTTP request.
-func NewTransformation(filename string) Transformation {
-	script := readScript(filename)
-
+func NewTransformation(script string) (Transformation, error) {
 	vm := goja.New()
+
 	_, err := vm.RunString(script)
 	if err != nil {
-		log.Fatalln("cannot run the transformation script:", err)
+		return nil, errors.New("cannot run the transformation script: " + err.Error())
 	}
+
 	transform, ok := goja.AssertFunction(vm.Get("transform"))
 	if !ok {
-		log.Fatalln("transform function not found!")
+		return nil, errors.New("transform function not found")
 	}
 
 	return func(host string, rec reader.Record) sender.Request {
-		params := createParams(rec)
+		params := createNamedParams(rec)
 
 		var jsRec goja.Value
 		if len(params) == 0 {
@@ -33,48 +35,58 @@ func NewTransformation(filename string) Transformation {
 		} else {
 			jsRec = vm.ToValue(params)
 		}
-		function, err := transform(goja.Undefined(), vm.ToValue(host), jsRec)
+
+		result, err := transform(goja.Undefined(), vm.ToValue(host), jsRec)
 		if err != nil {
-			log.Fatalln("cannot call the transform function:", err)
+			// We can't really do much with a runtime error, so let's just log it and skip the request
+			log.Println("an error occurred while calling the transform function:", err)
+			return sender.Request{}
 		}
 
-		obj := function.ToObject(vm)
+		if isEmptyValue(result) {
+			return sender.Request{}
+		}
+
+		obj := result.ToObject(vm)
 		return sender.Request{
-			Url:     readJsValue(obj, "url", ""),
-			Method:  readJsValue(obj, "method", "GET"),
+			Url:     readJsString(obj, "url"),
+			Method:  readJsString(obj, "method"),
 			Headers: readJsHeaders(vm, obj, "headers"),
-			Body:    readJsValue(obj, "body", ""),
+			Body:    readJsString(obj, "body"),
 		}
-	}
+	}, nil
 }
 
-func readScript(filename string) string {
-	script, err := os.ReadFile(filename)
-	if err != nil {
-		log.Fatalln("cannot read the transformation script:", err)
-	}
-	return string(script)
-}
-
-func readJsValue(obj *goja.Object, field string, def string) string {
+func readJsString(obj *goja.Object, field string) string {
 	v := obj.Get(field)
-	if v == nil {
-		return def
+	if isEmptyValue(v) {
+		return ""
 	}
 	return v.String()
 }
 
 func readJsHeaders(vm *goja.Runtime, obj *goja.Object, field string) string {
 	v := obj.Get(field)
-	if v == nil {
+	if isEmptyValue(v) {
 		return ""
 	}
-	// TODO: doesn't work if the headers are null
+
+	if v.ExportType().Kind() == reflect.String {
+		return v.String()
+	}
+
 	bytes, err := v.ToObject(vm).MarshalJSON()
 	if err != nil {
-		log.Fatalln("The request headers are not an object:", err)
+		// There's a small possibility that we might get a runtime error while converting headers to JSON.
+		// For example, it might be caused by a circular structure in headers. Let's log such cases and return an empty string.
+		log.Println("an error occurred while reading request headers:", err)
+		return ""
 	}
 	return string(bytes)
+}
+
+func isEmptyValue(v goja.Value) bool {
+	return v == nil || goja.IsNull(v) || goja.IsUndefined(v)
 }
 
 // DefaultTransformation transforms a raw record to an HTTP request.
@@ -82,7 +94,7 @@ func readJsHeaders(vm *goja.Runtime, obj *goja.Object, field string) string {
 // URL (without the host), HTTP method, headers (in JSON format), body.
 // If we do have a header, then it will look for these fields: url, method, headers, and body.
 func DefaultTransformation(host string, rec reader.Record) sender.Request {
-	params := createParams(rec)
+	params := createNamedParams(rec)
 	if len(params) == 0 {
 		params["url"] = getValue(rec.Values, 0)
 		params["method"] = getValue(rec.Values, 1)
@@ -90,22 +102,36 @@ func DefaultTransformation(host string, rec reader.Record) sender.Request {
 		params["body"] = getValue(rec.Values, 3)
 	}
 
-	if params["method"] == "" {
-		params["method"] = "GET"
-	}
-
 	return sender.Request{
-		Url:     host + params["url"],
+		Url:     buildUrl(host, params["url"]),
 		Method:  params["method"],
 		Headers: params["headers"],
 		Body:    params["body"],
 	}
 }
 
-func createParams(rec reader.Record) map[string]string {
+func buildUrl(h string, u string) string {
+	parsedHost, err := url.Parse(h)
+	if err != nil {
+		log.Println(err)
+		return h + u
+	}
+
+	parsedUrl, err := url.Parse(u)
+	if err != nil {
+		log.Println(err)
+		return h + u
+	}
+
+	parsedUrl.Scheme = parsedHost.Scheme
+	parsedUrl.Host = parsedHost.Host
+
+	return parsedUrl.String()
+}
+
+func createNamedParams(rec reader.Record) map[string]string {
 	params := map[string]string{}
 	if rec.Fields != nil {
-		// we have a header and we can use it
 		for i, field := range rec.Fields {
 			params[strings.ToLower(field)] = rec.Values[i]
 		}

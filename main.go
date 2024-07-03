@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"testpoint/internal/reader"
 	"testpoint/internal/sender"
@@ -12,18 +13,18 @@ import (
 )
 
 type config struct {
-	input      string
-	withHeader bool
-	hosts      []string
-	transform  string
-	workers    int
-	output     string
+	input     string
+	header    bool
+	hosts     []string
+	transform string
+	workers   int
+	output    string
 }
 
 func (c config) String() string {
 	return fmt.Sprintf(
-		"intput: \"%v\", header: %v, hosts: %v, transform: %v, workers: %v, output: \"%v\"",
-		c.input, c.withHeader, c.hosts, c.transform, c.workers, c.output,
+		"input: \"%v\", header: %v, hosts: %v, transform: %v, workers: %v, output: \"%v\"",
+		c.input, c.header, c.hosts, c.transform, c.workers, c.output,
 	)
 }
 
@@ -51,14 +52,9 @@ func main() {
 	log.Println(conf)
 	log.Println("starting to process the requests...")
 
-	records := reader.ReadRequests(conf.input, conf.withHeader)
+	records := reader.ReadRequests(conf.input, conf.header)
 
-	transformation := transformer.DefaultTransformation
-	if conf.transform != "" {
-		transformation = transformer.NewTransformation(conf.transform)
-	}
-
-	requests := transformer.TransformRequests(hosts, records, transformation)
+	requests := transformer.TransformRequests(hosts, records, createTransformation(conf.transform))
 	responses := sender.SendRequests(requests, conf.workers)
 	writer.WriteResponses(responses, conf.output)
 
@@ -66,6 +62,26 @@ func main() {
 	log.Printf("the result is saved in %v", conf.output)
 }
 
+func createTransformation(filepath string) transformer.Transformation {
+	if filepath == "" {
+		return transformer.DefaultTransformation
+	}
+	script := readScript(filepath)
+	transformation, err := transformer.NewTransformation(script)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return transformation
+}
+
 func parseHosts(hosts string) []string {
 	return strings.Split(strings.ReplaceAll(hosts, " ", ""), ",")
+}
+
+func readScript(filename string) string {
+	script, err := os.ReadFile(filename)
+	if err != nil {
+		log.Fatalln("cannot read the transformation script:", err)
+	}
+	return string(script)
 }
