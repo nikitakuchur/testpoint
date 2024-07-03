@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"errors"
+	"fmt"
 	"github.com/dop251/goja"
 	"net/url"
 	"reflect"
@@ -134,12 +135,15 @@ func mergeUrls(requestUrl string, userUrl string) (string, error) {
 		return "", err
 	}
 
-	if parsedUserUrl.Scheme != "" {
-		parsedRequestUrl.Scheme = parsedUserUrl.Scheme
+	if parsedUserUrl.Scheme == "" {
+		return "", errors.New(fmt.Sprintf("parse \"%s\": missing protocol scheme", userUrl))
 	}
-	if parsedUserUrl.Host != "" {
-		parsedRequestUrl.Host = parsedUserUrl.Host
+	if parsedUserUrl.Host == "" {
+		return "", errors.New(fmt.Sprintf("parse \"%s\": missing host", userUrl))
 	}
+
+	parsedRequestUrl.Scheme = parsedUserUrl.Scheme
+	parsedRequestUrl.Host = parsedUserUrl.Host
 	newPath := strings.TrimRight(parsedUserUrl.Path, "/")
 	if newPath != "" {
 		parsedRequestUrl.Path = newPath

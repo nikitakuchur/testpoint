@@ -101,7 +101,13 @@ function transform(host, record) {
 }
 
 func TestNewTransformationWithEmptyRequest(t *testing.T) {
-	scripts := []string{`
+	data := []struct {
+		name   string
+		script string
+	}{
+		{
+			"null_values",
+			`
 function transform(host, record) {
 	return {
 		url: null,
@@ -110,7 +116,11 @@ function transform(host, record) {
 		body: null
 	};
 }
-`, `
+`,
+		},
+		{
+			"undefined_values",
+			`
 function transform(host, record) {
 	return {
 		url: undefined,
@@ -119,34 +129,48 @@ function transform(host, record) {
 		body: undefined
 	};
 }
-`, `
+`,
+		},
+		{
+			"empty_request",
+			`
 function transform(host, record) {
 	return {};
 }
-`, `
+`,
+		},
+		{
+			"null_request",
+			`
 function transform(host, record) {
 	return null;
 }
-`, `
+`,
+		},
+		{
+			"undefined_request",
+			`
 function transform(host, record) {
 	return undefined;
 }
 `,
+		},
 	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			transformation, _ := transformer.NewTransformation(d.script)
+			record := reader.Record{
+				Values: []string{"/api/test", "PUT", "Hello world!"},
+			}
 
-	for _, script := range scripts {
-		transformation, _ := transformer.NewTransformation(script)
-		record := reader.Record{
-			Values: []string{"/api/test", "PUT", "Hello world!"},
-		}
+			actual, _ := transformation("http://test.com", record)
 
-		actual, _ := transformation("http://test.com", record)
-
-		expected := sender.Request{}
-		if actual != expected {
-			t.Error("failed script: ", script)
-			t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
-		}
+			expected := sender.Request{}
+			if actual != expected {
+				t.Error("failed script: ", d.script)
+				t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+			}
+		})
 	}
 }
 
@@ -257,27 +281,27 @@ func TestDefaultTransformationWithEmptyRecord(t *testing.T) {
 	}
 }
 
-func TestDefaultTransformationUrlConcat(t *testing.T) {
+func TestDefaultTransformationWithUrlMerging(t *testing.T) {
 	data := []struct {
-		name string
-		host string
-		url  string
+		name    string
+		userUrl string
+		reqUrl  string
 	}{
-		{"concat1", "http://test.com", "/api/new?param=1&param=2"},
-		{"concat2", "http://test.com", "api/new?param=1&param=2"},
-		{"concat3", "http://test.com/", "api/new?param=1&param=2"},
-		{"concat4", "http://test.com/", "/api/new?param=1&param=2"},
-		{"concat5", "http://test.com", "https://site.com/api/new?param=1&param=2"},
-		{"concat6", "http://test.com/", "https://site.com/api/new?param=1&param=2"},
-		{"concat7", "http://test.com", "https://localhost:8080/api/new?param=1&param=2"},
-		{"concat8", "http://test.com/", "https://localhost:8080/api/new?param=1&param=2"},
-		{"concat7", "http://test.com/api/new", "https://localhost:8080/api/old?param=1&param=2"},
-		{"concat8", "http://test.com/api/new/", "https://localhost:8080/api/old?param=1&param=2"},
+		{"right_slash", "http://test.com", "/api/new?param=1&param=2"},
+		{"left_slash", "http://test.com/", "api/new?param=1&param=2"},
+		{"no_slashes", "http://test.com", "api/new?param=1&param=2"},
+		{"both_slashes", "http://test.com/", "/api/new?param=1&param=2"},
+		{"host", "http://test.com", "https://site.com/api/new?param=1&param=2"},
+		{"host_with_slash", "http://test.com/", "https://site.com/api/new?param=1&param=2"},
+		{"host_with_port", "http://test.com", "https://localhost:8080/api/new?param=1&param=2"},
+		{"host_with_port_and_slash", "http://test.com/", "https://localhost:8080/api/new?param=1&param=2"},
+		{"host_with_path", "http://test.com/api/new", "https://site.com/api/old?param=1&param=2"},
+		{"host_with_path_and_slash", "http://test.com/api/new/", "https://site.com/api/old?param=1&param=2"},
 	}
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			actual, _ := transformer.DefaultTransformation(d.host, reader.Record{Values: []string{d.url}})
+			actual, _ := transformer.DefaultTransformation(d.userUrl, reader.Record{Values: []string{d.reqUrl}})
 
 			expected := sender.Request{Url: "http://test.com/api/new?param=1&param=2"}
 			if actual != expected {
@@ -287,16 +311,24 @@ func TestDefaultTransformationUrlConcat(t *testing.T) {
 	}
 }
 
-func TestDefaultTransformationIncorrectHost(t *testing.T) {
-	_, err := transformer.DefaultTransformation("://test.com", reader.Record{Values: []string{"/api/test"}})
-	if err == nil {
-		t.Errorf("incorrect result: expected an error")
+func TestDefaultTransformationWithIncorrectUrls(t *testing.T) {
+	data := []struct {
+		name    string
+		userUrl string
+		reqUrl  string
+	}{
+		{"incorrect_user_url", "://test.com", "/api/test"},
+		{"incorrect_req_url", "http://test.com", ":/api/test"},
+		{"missing_scheme", "test.com", "/api/test"},
+		{"missing_host", "http://", "/api/test"},
 	}
-}
 
-func TestDefaultTransformationIncorrectUrl(t *testing.T) {
-	_, err := transformer.DefaultTransformation("http://test.com", reader.Record{Values: []string{":/api/test"}})
-	if err == nil {
-		t.Errorf("incorrect result: expected an error")
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			_, err := transformer.DefaultTransformation(d.userUrl, reader.Record{Values: []string{d.reqUrl}})
+			if err == nil {
+				t.Errorf("incorrect result: expected an error")
+			}
+		})
 	}
 }
