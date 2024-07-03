@@ -30,7 +30,7 @@ func (c config) String() string {
 
 func main() {
 	inputPtr := flag.String("input", "", "a CSV file or directory with CSV files")
-	headerPtr := flag.Bool("header", false, "enable this flag if your CSV file has a header")
+	headerPtr := flag.Bool("no-header", true, "enable this flag if your CSV file has no header")
 	hostsPtr := flag.String("hosts", "", "a list of hosts to send requests to")
 	transformPtr := flag.String("transform", "", "a JavaScript file with a request transformation")
 	workPtr := flag.Int("w", 1, "a number of workers to send requests")

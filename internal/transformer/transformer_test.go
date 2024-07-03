@@ -1,6 +1,7 @@
 package transformer_test
 
 import (
+	"errors"
 	"testing"
 	"testpoint/internal/reader"
 	"testpoint/internal/sender"
@@ -49,8 +50,28 @@ func TestTransformRequests(t *testing.T) {
 	}
 }
 
-func testTransformation(host string, rec reader.Record) sender.Request {
-	return sender.Request{Url: host + rec.Values[0]}
+func TestTransformRequestsWithIncorrectRecords(t *testing.T) {
+	records := make(chan reader.Record)
+	go func() {
+		records <- reader.Record{Values: []string{"/api/test1"}}
+		records <- reader.Record{Values: []string{"/api/test2"}}
+		close(records)
+	}()
+
+	requests := transformer.TransformRequests([]string{"http://test1.com", "http://test2.com"}, records, errorTransformation)
+
+	var actual = chanToSet(requests)
+	if len(actual) != 0 {
+		t.Error("incorrect result: expected set size is 0, got", len(actual))
+	}
+}
+
+func testTransformation(host string, rec reader.Record) (sender.Request, error) {
+	return sender.Request{Url: host + rec.Values[0]}, nil
+}
+
+func errorTransformation(_ string, _ reader.Record) (sender.Request, error) {
+	return sender.Request{}, errors.New("error")
 }
 
 func chanToSet(input <-chan sender.Request) map[sender.Request]bool {

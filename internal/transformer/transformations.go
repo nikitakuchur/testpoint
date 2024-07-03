@@ -3,7 +3,6 @@ package transformer
 import (
 	"errors"
 	"github.com/dop251/goja"
-	"log"
 	"net/url"
 	"reflect"
 	"strings"
@@ -26,7 +25,7 @@ func NewTransformation(script string) (Transformation, error) {
 		return nil, errors.New("transform function not found")
 	}
 
-	return func(host string, rec reader.Record) sender.Request {
+	return func(host string, rec reader.Record) (sender.Request, error) {
 		params := createNamedParams(rec)
 
 		var jsRec goja.Value
@@ -38,22 +37,27 @@ func NewTransformation(script string) (Transformation, error) {
 
 		result, err := transform(goja.Undefined(), vm.ToValue(host), jsRec)
 		if err != nil {
-			// We can't really do much with a runtime error, so let's just log it and skip the request
-			log.Println("an error occurred while calling the transform function:", err)
-			return sender.Request{}
+			// We can't really do much with a runtime error, so let's just return an error to skip the record
+			return sender.Request{}, errors.New("JavaScript runtime error: " + err.Error())
 		}
 
 		if isEmptyValue(result) {
-			return sender.Request{}
+			return sender.Request{}, nil
 		}
 
 		obj := result.ToObject(vm)
+
+		parsedHeaders, err := readJsHeaders(vm, obj, "headers")
+		if err != nil {
+			return sender.Request{}, errors.New("JavaScript runtime error: " + err.Error())
+		}
+
 		return sender.Request{
 			Url:     readJsString(obj, "url"),
 			Method:  readJsString(obj, "method"),
-			Headers: readJsHeaders(vm, obj, "headers"),
+			Headers: parsedHeaders,
 			Body:    readJsString(obj, "body"),
-		}
+		}, nil
 	}, nil
 }
 
@@ -65,24 +69,23 @@ func readJsString(obj *goja.Object, field string) string {
 	return v.String()
 }
 
-func readJsHeaders(vm *goja.Runtime, obj *goja.Object, field string) string {
+func readJsHeaders(vm *goja.Runtime, obj *goja.Object, field string) (string, error) {
 	v := obj.Get(field)
 	if isEmptyValue(v) {
-		return ""
+		return "", nil
 	}
 
 	if v.ExportType().Kind() == reflect.String {
-		return v.String()
+		return v.String(), nil
 	}
 
 	bytes, err := v.ToObject(vm).MarshalJSON()
 	if err != nil {
 		// There's a small possibility that we might get a runtime error while converting headers to JSON.
-		// For example, it might be caused by a circular structure in headers. Let's log such cases and return an empty string.
-		log.Println("an error occurred while reading request headers:", err)
-		return ""
+		// For example, it might be caused by marshalling a circular structure.
+		return "", err
 	}
-	return string(bytes)
+	return string(bytes), nil
 }
 
 func isEmptyValue(v goja.Value) bool {
@@ -93,7 +96,7 @@ func isEmptyValue(v goja.Value) bool {
 // If we don't have a header in the CSV file, the transformation expects the data to be in the following order:
 // URL (without the host), HTTP method, headers (in JSON format), body.
 // If we do have a header, then it will look for these fields: url, method, headers, and body.
-func DefaultTransformation(host string, rec reader.Record) sender.Request {
+func DefaultTransformation(host string, rec reader.Record) (sender.Request, error) {
 	params := createNamedParams(rec)
 	if len(params) == 0 {
 		params["url"] = getValue(rec.Values, 0)
@@ -102,31 +105,35 @@ func DefaultTransformation(host string, rec reader.Record) sender.Request {
 		params["body"] = getValue(rec.Values, 3)
 	}
 
+	u, err := buildUrl(host, params["url"])
+	if err != nil {
+		// If the url cannot be parsed, it's better to return an error and skip the record
+		return sender.Request{}, errors.New("cannot build a URL: " + err.Error())
+	}
+
 	return sender.Request{
-		Url:     buildUrl(host, params["url"]),
+		Url:     u,
 		Method:  params["method"],
 		Headers: params["headers"],
 		Body:    params["body"],
-	}
+	}, nil
 }
 
-func buildUrl(h string, u string) string {
+func buildUrl(h string, u string) (string, error) {
 	parsedHost, err := url.Parse(h)
 	if err != nil {
-		log.Println(err)
-		return h + u
+		return "", err
 	}
 
 	parsedUrl, err := url.Parse(u)
 	if err != nil {
-		log.Println(err)
-		return h + u
+		return "", err
 	}
 
 	parsedUrl.Scheme = parsedHost.Scheme
 	parsedUrl.Host = parsedHost.Host
 
-	return parsedUrl.String()
+	return parsedUrl.String(), nil
 }
 
 func createNamedParams(rec reader.Record) map[string]string {

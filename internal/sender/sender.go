@@ -67,14 +67,15 @@ func sendRequest(client *http.Client, req Request) (Response, error) {
 		return Response{}, errors.New("cannot create an http request: " + err.Error())
 	}
 
-	headersMap := map[string]string{}
-	err = json.Unmarshal([]byte(req.Headers), &headersMap)
-	if err != nil {
-		return Response{}, errors.New("cannot convert headers to a map")
-	}
-
-	for k, v := range headersMap {
-		httpReq.Header.Set(k, v)
+	if req.Headers != "" {
+		headersMap := map[string]string{}
+		err = json.Unmarshal([]byte(req.Headers), &headersMap)
+		if err != nil {
+			return Response{}, errors.New("cannot convert headers to a map")
+		}
+		for k, v := range headersMap {
+			httpReq.Header.Set(k, v)
+		}
 	}
 
 	resp, err := doRequest(client, httpReq, 5)

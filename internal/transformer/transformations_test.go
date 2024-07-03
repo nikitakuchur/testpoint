@@ -23,7 +23,7 @@ function transform(host, record) {
 		Values: []string{"/api/test", "PUT", `{"test_header":"test_value"}`, "Hello world!"},
 	}
 
-	actual := transformation("http://test.com", record)
+	actual, _ := transformation("http://test.com", record)
 
 	expected := sender.Request{
 		Url:     "http://test.com/api/test",
@@ -54,7 +54,7 @@ function transform(host, record) {
 		Values: []string{"/api/test", "PUT", `{"test_header":"test_value"}`, "Hello world!"},
 	}
 
-	actual := transformation("http://test.com", record)
+	actual, _ := transformation("http://test.com", record)
 
 	expected := sender.Request{
 		Url:     "http://test.com/api/test",
@@ -86,7 +86,7 @@ function transform(host, record) {
 		Values: []string{"/api/test", "PUT", "Hello world!"},
 	}
 
-	actual := transformation("http://test.com", record)
+	actual, _ := transformation("http://test.com", record)
 
 	expected := sender.Request{
 		Url:     "http://test.com/api/test",
@@ -140,7 +140,7 @@ function transform(host, record) {
 			Values: []string{"/api/test", "PUT", "Hello world!"},
 		}
 
-		actual := transformation("http://test.com", record)
+		actual, _ := transformation("http://test.com", record)
 
 		expected := sender.Request{}
 		if actual != expected {
@@ -172,11 +172,10 @@ function transform(host, record) {
 		Values: []string{"/api/test", "PUT", "Hello world!"},
 	}
 
-	actual := transformation("http://test.com", record)
+	_, err := transformation("http://test.com", record)
 
-	expected := sender.Request{}
-	if actual != expected {
-		t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+	if err == nil {
+		t.Errorf("incorrect result: expected an error")
 	}
 }
 
@@ -198,15 +197,10 @@ function transform(host, record) {
 		Values: []string{"/api/test", "PUT", "Hello world!"},
 	}
 
-	actual := transformation("http://test.com", record)
+	_, err := transformation("http://test.com", record)
 
-	expected := sender.Request{
-		Url:    "http://test.com/api/test",
-		Method: "PUT",
-		Body:   "Hello world!",
-	}
-	if actual != expected {
-		t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+	if err == nil {
+		t.Errorf("incorrect result: expected an error")
 	}
 }
 
@@ -219,7 +213,7 @@ func TestDefaultTransformation(t *testing.T) {
 	}}
 
 	for _, record := range records {
-		actual := transformer.DefaultTransformation("http://test.com", record)
+		actual, _ := transformer.DefaultTransformation("http://test.com", record)
 
 		expected := sender.Request{
 			Url:     "http://test.com/api/test",
@@ -239,7 +233,7 @@ func TestDefaultTransformationWithFields(t *testing.T) {
 		Values: []string{"Hello world!", `{"test_header":"test_value"}`, "PUT", "/api/test"},
 	}
 
-	actual := transformer.DefaultTransformation("http://test.com", record)
+	actual, _ := transformer.DefaultTransformation("http://test.com", record)
 
 	expected := sender.Request{
 		Url:     "http://test.com/api/test",
@@ -255,7 +249,7 @@ func TestDefaultTransformationWithFields(t *testing.T) {
 func TestDefaultTransformationWithEmptyRecord(t *testing.T) {
 	record := reader.Record{}
 
-	actual := transformer.DefaultTransformation("http://test.com", record)
+	actual, _ := transformer.DefaultTransformation("http://test.com", record)
 
 	expected := sender.Request{Url: "http://test.com"}
 	if actual != expected {
@@ -281,7 +275,7 @@ func TestDefaultTransformationUrlConcat(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			actual := transformer.DefaultTransformation(d.host, reader.Record{Values: []string{d.url}})
+			actual, _ := transformer.DefaultTransformation(d.host, reader.Record{Values: []string{d.url}})
 
 			expected := sender.Request{Url: "http://test.com/api/test?param=1&param=2"}
 			if actual != expected {
@@ -292,19 +286,15 @@ func TestDefaultTransformationUrlConcat(t *testing.T) {
 }
 
 func TestDefaultTransformationIncorrectHost(t *testing.T) {
-	actual := transformer.DefaultTransformation("://test.com", reader.Record{Values: []string{"/api/test"}})
-
-	expected := sender.Request{Url: "://test.com/api/test"}
-	if actual != expected {
-		t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+	_, err := transformer.DefaultTransformation("://test.com", reader.Record{Values: []string{"/api/test"}})
+	if err == nil {
+		t.Errorf("incorrect result: expected an error")
 	}
 }
 
 func TestDefaultTransformationIncorrectUrl(t *testing.T) {
-	actual := transformer.DefaultTransformation("http://test.com", reader.Record{Values: []string{":/api/test"}})
-
-	expected := sender.Request{Url: "http://test.com:/api/test"}
-	if actual != expected {
-		t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
+	_, err := transformer.DefaultTransformation("http://test.com", reader.Record{Values: []string{":/api/test"}})
+	if err == nil {
+		t.Errorf("incorrect result: expected an error")
 	}
 }
