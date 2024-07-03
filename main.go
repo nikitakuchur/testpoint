@@ -15,7 +15,7 @@ import (
 type config struct {
 	input     string
 	header    bool
-	hosts     []string
+	urls      []string
 	transform string
 	workers   int
 	output    string
@@ -23,27 +23,27 @@ type config struct {
 
 func (c config) String() string {
 	return fmt.Sprintf(
-		"input: \"%v\", header: %v, hosts: %v, transform: %v, workers: %v, output: \"%v\"",
-		c.input, c.header, c.hosts, c.transform, c.workers, c.output,
+		"input: \"%v\", header: %v, urls: %v, transform: %v, workers: %v, output: \"%v\"",
+		c.input, c.header, c.urls, c.transform, c.workers, c.output,
 	)
 }
 
 func main() {
 	inputPtr := flag.String("input", "", "a CSV file or directory with CSV files")
 	headerPtr := flag.Bool("no-header", true, "enable this flag if your CSV file has no header")
-	hostsPtr := flag.String("hosts", "", "a list of hosts to send requests to")
+	hostsPtr := flag.String("urls", "", "a list of hosts to send requests to")
 	transformPtr := flag.String("transform", "", "a JavaScript file with a request transformation")
 	workPtr := flag.Int("w", 1, "a number of workers to send requests")
 	outputPtr := flag.String("output", "./", "a directory where the output files need to be saved")
 
 	flag.Parse()
 
-	hosts := parseHosts(*hostsPtr)
+	urls := parseUrls(*hostsPtr)
 
 	conf := config{
 		*inputPtr,
 		*headerPtr,
-		hosts,
+		urls,
 		*transformPtr,
 		*workPtr,
 		*outputPtr,
@@ -54,7 +54,7 @@ func main() {
 
 	records := reader.ReadRequests(conf.input, conf.header)
 
-	requests := transformer.TransformRequests(hosts, records, createTransformation(conf.transform))
+	requests := transformer.TransformRequests(urls, records, createTransformation(conf.transform))
 	responses := sender.SendRequests(requests, conf.workers)
 	writer.WriteResponses(responses, conf.output)
 
@@ -74,8 +74,8 @@ func createTransformation(filepath string) transformer.Transformation {
 	return transformation
 }
 
-func parseHosts(hosts string) []string {
-	return strings.Split(strings.ReplaceAll(hosts, " ", ""), ",")
+func parseUrls(urls string) []string {
+	return strings.Split(strings.ReplaceAll(urls, " ", ""), ",")
 }
 
 func readScript(filename string) string {

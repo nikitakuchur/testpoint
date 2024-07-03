@@ -11,7 +11,7 @@ import (
 )
 
 // NewTransformation creates a new transformation from the given JavaScript code.
-// The script must have a function called transform that accepts a host and a CSV record, and returns an HTTP request.
+// The script must have a function called transform that accepts a user url and a CSV record, and returns an HTTP request.
 func NewTransformation(script string) (Transformation, error) {
 	vm := goja.New()
 
@@ -25,7 +25,7 @@ func NewTransformation(script string) (Transformation, error) {
 		return nil, errors.New("transform function not found")
 	}
 
-	return func(host string, rec reader.Record) (sender.Request, error) {
+	return func(userUrl string, rec reader.Record) (sender.Request, error) {
 		params := createNamedParams(rec)
 
 		var jsRec goja.Value
@@ -35,7 +35,7 @@ func NewTransformation(script string) (Transformation, error) {
 			jsRec = vm.ToValue(params)
 		}
 
-		result, err := transform(goja.Undefined(), vm.ToValue(host), jsRec)
+		result, err := transform(goja.Undefined(), vm.ToValue(userUrl), jsRec)
 		if err != nil {
 			// We can't really do much with a runtime error, so let's just return an error to skip the record
 			return sender.Request{}, errors.New("JavaScript runtime error: " + err.Error())
@@ -94,9 +94,9 @@ func isEmptyValue(v goja.Value) bool {
 
 // DefaultTransformation transforms a raw record to an HTTP request.
 // If we don't have a header in the CSV file, the transformation expects the data to be in the following order:
-// URL (without the host), HTTP method, headers (in JSON format), body.
+// URL, HTTP method, headers (in JSON format), body.
 // If we do have a header, then it will look for these fields: url, method, headers, and body.
-func DefaultTransformation(host string, rec reader.Record) (sender.Request, error) {
+func DefaultTransformation(userUrl string, rec reader.Record) (sender.Request, error) {
 	params := createNamedParams(rec)
 	if len(params) == 0 {
 		params["url"] = getValue(rec.Values, 0)
@@ -105,35 +105,47 @@ func DefaultTransformation(host string, rec reader.Record) (sender.Request, erro
 		params["body"] = getValue(rec.Values, 3)
 	}
 
-	u, err := buildUrl(host, params["url"])
+	mergedUrl, err := mergeUrls(params["url"], userUrl)
 	if err != nil {
-		// If the url cannot be parsed, it's better to return an error and skip the record
-		return sender.Request{}, errors.New("cannot build a URL: " + err.Error())
+		// If the URL cannot be parsed, it's better to return an error and skip the record
+		return sender.Request{}, err
 	}
 
 	return sender.Request{
-		Url:     u,
+		Url:     mergedUrl,
 		Method:  params["method"],
 		Headers: params["headers"],
 		Body:    params["body"],
 	}, nil
 }
 
-func buildUrl(h string, u string) (string, error) {
-	parsedHost, err := url.Parse(h)
+// mergeUrls merges request URLs from the input files with the user's URL.
+// For example, let's assume we have the following URL in the file: "http://test.com/api/old?param=123".
+// If the user's URL is "http://newtest.com", this function will return "http://newtest.com/api/old?param=123".
+// If the user's URL is "http://newtest.com/api/new", this function will return "http://newtest.com/api/new?param=123".
+func mergeUrls(requestUrl string, userUrl string) (string, error) {
+	parsedRequestUrl, err := url.Parse(requestUrl)
 	if err != nil {
 		return "", err
 	}
 
-	parsedUrl, err := url.Parse(u)
+	parsedUserUrl, err := url.Parse(userUrl)
 	if err != nil {
 		return "", err
 	}
 
-	parsedUrl.Scheme = parsedHost.Scheme
-	parsedUrl.Host = parsedHost.Host
+	if parsedUserUrl.Scheme != "" {
+		parsedRequestUrl.Scheme = parsedUserUrl.Scheme
+	}
+	if parsedUserUrl.Host != "" {
+		parsedRequestUrl.Host = parsedUserUrl.Host
+	}
+	newPath := strings.TrimRight(parsedUserUrl.Path, "/")
+	if newPath != "" {
+		parsedRequestUrl.Path = newPath
+	}
 
-	return parsedUrl.String(), nil
+	return parsedRequestUrl.String(), nil
 }
 
 func createNamedParams(rec reader.Record) map[string]string {

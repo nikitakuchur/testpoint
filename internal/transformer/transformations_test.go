@@ -263,21 +263,23 @@ func TestDefaultTransformationUrlConcat(t *testing.T) {
 		host string
 		url  string
 	}{
-		{"concat1", "http://test.com", "/api/test?param=1&param=2"},
-		{"concat2", "http://test.com", "api/test?param=1&param=2"},
-		{"concat3", "http://test.com/", "api/test?param=1&param=2"},
-		{"concat4", "http://test.com/", "/api/test?param=1&param=2"},
-		{"concat5", "http://test.com", "https://site.com/api/test?param=1&param=2"},
-		{"concat6", "http://test.com/", "https://site.com/api/test?param=1&param=2"},
-		{"concat7", "http://test.com/", "https://localhost:8080/api/test?param=1&param=2"},
-		{"concat8", "http://test.com/", "https://localhost:8080/api/test?param=1&param=2"},
+		{"concat1", "http://test.com", "/api/new?param=1&param=2"},
+		{"concat2", "http://test.com", "api/new?param=1&param=2"},
+		{"concat3", "http://test.com/", "api/new?param=1&param=2"},
+		{"concat4", "http://test.com/", "/api/new?param=1&param=2"},
+		{"concat5", "http://test.com", "https://site.com/api/new?param=1&param=2"},
+		{"concat6", "http://test.com/", "https://site.com/api/new?param=1&param=2"},
+		{"concat7", "http://test.com", "https://localhost:8080/api/new?param=1&param=2"},
+		{"concat8", "http://test.com/", "https://localhost:8080/api/new?param=1&param=2"},
+		{"concat7", "http://test.com/api/new", "https://localhost:8080/api/old?param=1&param=2"},
+		{"concat8", "http://test.com/api/new/", "https://localhost:8080/api/old?param=1&param=2"},
 	}
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			actual, _ := transformer.DefaultTransformation(d.host, reader.Record{Values: []string{d.url}})
 
-			expected := sender.Request{Url: "http://test.com/api/test?param=1&param=2"}
+			expected := sender.Request{Url: "http://test.com/api/new?param=1&param=2"}
 			if actual != expected {
 				t.Errorf("incorrect result: expected request is %v, got %v", expected, actual)
 			}
