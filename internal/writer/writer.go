@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testpoint/internal/sender"
 	"time"
@@ -51,13 +52,13 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 			writerMap[userUrl] = writer
 
 			writeLine(writer, []string{
-				"request_url", "request_method", "request_headers", "request_body",
+				"request_url", "request_method", "request_headers", "request_body", "request_hash",
 				"response_status", "response_body",
 			})
 		}
 
 		writeLine(writer, []string{
-			rr.Request.Url, rr.Request.Method, rr.Request.Headers, rr.Request.Body,
+			rr.Request.Url, rr.Request.Method, rr.Request.Headers, rr.Request.Body, strconv.FormatUint(rr.Request.Hash, 10),
 			rr.Response.Status, rr.Response.Body,
 		})
 		processed++

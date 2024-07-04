@@ -18,8 +18,8 @@ type Request struct {
 	Headers string
 	Body    string
 
-	// we're keeping it here to name the output files later
 	UserUrl string
+	Hash    uint64
 }
 
 func (r Request) String() string {

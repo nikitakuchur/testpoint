@@ -32,6 +32,7 @@ func TransformRequests(userUrls []string, input <-chan reader.Record, transforma
 					req.Method = "GET"
 				}
 				req.UserUrl = url
+				req.Hash = rec.Hash
 
 				output <- req
 			}

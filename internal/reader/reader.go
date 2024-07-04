@@ -3,6 +3,7 @@ package reader
 import (
 	"encoding/csv"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"log"
 	"os"
@@ -13,6 +14,7 @@ import (
 type Record struct {
 	Fields []string
 	Values []string
+	Hash   uint64
 }
 
 func (rec Record) String() string {
@@ -86,15 +88,24 @@ func readRecords(reader *csv.Reader, withHeader bool, output chan<- Record) erro
 	}
 
 	for {
-		rec, err := reader.Read()
+		values, err := reader.Read()
 		if err == io.EOF {
 			return nil
 		}
 		if err != nil {
 			return err
 		}
-		output <- Record{header, rec}
+
+		rec := Record{Fields: header, Values: values}
+		rec.Hash = hash(rec)
+		output <- rec
 	}
+}
+
+func hash(rec Record) uint64 {
+	h := fnv.New64()
+	h.Write([]byte(rec.String()))
+	return h.Sum64()
 }
 
 func readFilenames(path string) ([]string, error) {
