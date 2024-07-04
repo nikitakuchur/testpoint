@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testpoint/internal/sender"
 	"time"
 )
@@ -23,7 +24,7 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 		}
 	}()
 
-	processed := 0
+	var processed atomic.Uint64
 	ticker := time.NewTicker(10 * time.Second)
 	done := make(chan bool)
 
@@ -33,7 +34,7 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 			case <-done:
 				return
 			case _ = <-ticker.C:
-				log.Printf("processed %v requests...", processed)
+				log.Printf("processed %v requests...", processed.Load())
 			}
 		}
 	}()
@@ -57,15 +58,16 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 			})
 		}
 
+		reqHash := strconv.FormatUint(rr.Request.Hash, 10)
 		writeLine(writer, []string{
-			rr.Request.Url, rr.Request.Method, rr.Request.Headers, rr.Request.Body, strconv.FormatUint(rr.Request.Hash, 10),
+			rr.Request.Url, rr.Request.Method, rr.Request.Headers, rr.Request.Body, reqHash,
 			rr.Response.Status, rr.Response.Body,
 		})
-		processed++
+		processed.Add(1)
 	}
 	ticker.Stop()
 	done <- true
-	log.Println("total number of processed requests:", processed)
+	log.Println("total number of processed requests:", processed.Load())
 }
 
 func urlToFilename(url string) string {
