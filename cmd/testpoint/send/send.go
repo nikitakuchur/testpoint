@@ -1,4 +1,4 @@
-package main
+package send
 
 import (
 	"flag"
@@ -14,7 +14,7 @@ import (
 
 type config struct {
 	input     string
-	header    bool
+	noHeader  bool
 	urls      []string
 	transform string
 	workers   int
@@ -22,37 +22,52 @@ type config struct {
 }
 
 func (c config) String() string {
+	transform := c.transform
+	if transform == "" {
+		transform = "default"
+	}
 	return fmt.Sprintf(
-		"input: \"%v\", header: %v, urls: %v, transform: %v, workers: %v, output: \"%v\"",
-		c.input, c.header, c.urls, c.transform, c.workers, c.output,
+		"input: '%v', noHeader: %v, urls: %v, transform: %v, workers: %v, output: '%v'",
+		c.input, c.noHeader, c.urls, transform, c.workers, c.output,
 	)
 }
 
-func main() {
+func Command() {
 	inputPtr := flag.String("input", "", "a CSV file or directory with CSV files")
-	headerPtr := flag.Bool("no-header", true, "enable this flag if your CSV file has no header")
-	hostsPtr := flag.String("urls", "", "a list of hosts to send requests to")
+	noHeaderPtr := flag.Bool("no-header", false, "enable this flag if your CSV file has no header")
+	hostsPtr := flag.String("urls", "", "a list of hosts, separated by commas, to which requests are to be sent")
 	transformPtr := flag.String("transform", "", "a JavaScript file with a request transformation")
 	workPtr := flag.Int("w", 1, "a number of workers to send requests")
 	outputPtr := flag.String("output", "./", "a directory where the output files need to be saved")
 
-	flag.Parse()
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage of send:\n")
+		flag.PrintDefaults()
+	}
+
+	if os.Args[1] == "help" {
+		flag.CommandLine.SetOutput(os.Stdout)
+		flag.Usage()
+		return
+	}
+
+	flag.CommandLine.Parse(os.Args[2:])
 
 	urls := parseUrls(*hostsPtr)
 
 	conf := config{
 		*inputPtr,
-		*headerPtr,
+		*noHeaderPtr,
 		urls,
 		*transformPtr,
 		*workPtr,
 		*outputPtr,
 	}
 
-	log.Println(conf)
+	log.Printf("configuration: {%v}\n", conf)
 	log.Println("starting to process the requests...")
 
-	records := reader.ReadRequests(conf.input, conf.header)
+	records := reader.ReadRequests(conf.input, !conf.noHeader)
 
 	requests := transformer.TransformRequests(urls, records, createTransformation(conf.transform))
 	responses := sender.SendRequests(requests, conf.workers)
