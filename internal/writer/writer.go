@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testpoint/internal/sender"
+	"time"
 )
 
 // WriteResponses creates files for each unique host and writes the results in them.
@@ -18,6 +19,21 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 		for k, file := range fileMap {
 			writerMap[k].Flush()
 			closeFile(file)
+		}
+	}()
+
+	processed := 0
+	ticker := time.NewTicker(10 * time.Second)
+	done := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case _ = <-ticker.C:
+				log.Printf("processed %v requests...", processed)
+			}
 		}
 	}()
 
@@ -44,7 +60,11 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 			rr.Request.Url, rr.Request.Method, rr.Request.Headers, rr.Request.Body,
 			rr.Response.Status, rr.Response.Body,
 		})
+		processed++
 	}
+	ticker.Stop()
+	done <- true
+	log.Println("total number of processed requests:", processed)
 }
 
 func urlToFilename(url string) string {
