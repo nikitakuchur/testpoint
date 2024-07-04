@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"testpoint/internal/filter"
 	"testpoint/internal/reader"
 	"testpoint/internal/sender"
 	"testpoint/internal/transformer"
@@ -55,6 +56,8 @@ func Command() {
 	log.Println("starting to process the requests...")
 
 	records := reader.ReadRequests(conf.input, !conf.noHeader)
+
+	records = filter.Filter(records)
 
 	requests := transformer.TransformRequests(conf.urls, records, createTransformation(conf.transform))
 	responses := sender.SendRequests(requests, conf.workers)
