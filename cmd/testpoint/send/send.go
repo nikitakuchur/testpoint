@@ -40,25 +40,12 @@ func Command() {
 	workPtr := flag.Int("w", 1, "a number of workers to send requests")
 	outputPtr := flag.String("output", "./", "a directory where the output files need to be saved")
 
-	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage of send:\n")
-		flag.PrintDefaults()
-	}
-
-	if os.Args[1] == "help" {
-		flag.CommandLine.SetOutput(os.Stdout)
-		flag.Usage()
-		return
-	}
-
-	flag.CommandLine.Parse(os.Args[2:])
-
-	urls := parseUrls(*hostsPtr)
+	flag.Parse()
 
 	conf := config{
 		*inputPtr,
 		*noHeaderPtr,
-		urls,
+		parseUrls(*hostsPtr),
 		*transformPtr,
 		*workPtr,
 		*outputPtr,
@@ -69,7 +56,7 @@ func Command() {
 
 	records := reader.ReadRequests(conf.input, !conf.noHeader)
 
-	requests := transformer.TransformRequests(urls, records, createTransformation(conf.transform))
+	requests := transformer.TransformRequests(conf.urls, records, createTransformation(conf.transform))
 	responses := sender.SendRequests(requests, conf.workers)
 	writer.WriteResponses(responses, conf.output)
 
