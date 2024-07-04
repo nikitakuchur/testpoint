@@ -38,7 +38,7 @@ Use "testpoint help <command>" for more information about a command.`)
 func main() {
 	if len(os.Args) < 2 {
 		usage()
-		return
+		os.Exit(2)
 	}
 	command := os.Args[1]
 
