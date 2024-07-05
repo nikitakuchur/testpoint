@@ -3,7 +3,7 @@ package transformer_test
 import (
 	"github.com/google/go-cmp/cmp"
 	"testing"
-	"testpoint/internal/reader"
+	"testpoint/internal/reqreader"
 	"testpoint/internal/sender"
 	"testpoint/internal/transformer"
 )
@@ -20,7 +20,7 @@ function transform(host, record) {
 }
 `)
 
-	record := reader.Record{
+	record := reqreader.Record{
 		Values: []string{"/api/test", "PUT", `{"test_header":"test_value"}`, "Hello world!"},
 	}
 
@@ -50,7 +50,7 @@ function transform(host, record) {
 }
 `)
 
-	record := reader.Record{
+	record := reqreader.Record{
 		Fields: []string{"url", "method", "headers", "body"},
 		Values: []string{"/api/test", "PUT", `{"test_header":"test_value"}`, "Hello world!"},
 	}
@@ -83,7 +83,7 @@ function transform(host, record) {
 }
 `)
 
-	record := reader.Record{
+	record := reqreader.Record{
 		Values: []string{"/api/test", "PUT", "Hello world!"},
 	}
 
@@ -160,7 +160,7 @@ function transform(host, record) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			transformation, _ := transformer.NewTransformation(d.script)
-			record := reader.Record{
+			record := reqreader.Record{
 				Values: []string{"/api/test", "PUT", "Hello world!"},
 			}
 
@@ -193,7 +193,7 @@ function transform(host, record) {
 }
 `)
 
-	record := reader.Record{
+	record := reqreader.Record{
 		Values: []string{"/api/test", "PUT", "Hello world!"},
 	}
 
@@ -218,7 +218,7 @@ function transform(host, record) {
 }
 `)
 
-	record := reader.Record{
+	record := reqreader.Record{
 		Values: []string{"/api/test", "PUT", "Hello world!"},
 	}
 
@@ -230,7 +230,7 @@ function transform(host, record) {
 }
 
 func TestDefaultTransformation(t *testing.T) {
-	records := []reader.Record{{
+	records := []reqreader.Record{{
 		Values: []string{"/api/test", "PUT", `{"test_header":"test_value"}`, "Hello world!"},
 	}, {
 		Fields: []string{"body", "headers", "method", "url"},
@@ -254,7 +254,7 @@ func TestDefaultTransformation(t *testing.T) {
 }
 
 func TestDefaultTransformationWithFields(t *testing.T) {
-	record := reader.Record{
+	record := reqreader.Record{
 		Fields: []string{"body", "headers", "method", "url"},
 		Values: []string{"Hello world!", `{"test_header":"test_value"}`, "PUT", "/api/test"},
 	}
@@ -273,7 +273,7 @@ func TestDefaultTransformationWithFields(t *testing.T) {
 }
 
 func TestDefaultTransformationWithEmptyRecord(t *testing.T) {
-	record := reader.Record{}
+	record := reqreader.Record{}
 
 	actual, _ := transformer.DefaultTransformation("http://test.com", record)
 
@@ -304,7 +304,7 @@ func TestDefaultTransformationWithUrlMerging(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			actual, _ := transformer.DefaultTransformation(d.userUrl, reader.Record{Values: []string{d.reqUrl}})
+			actual, _ := transformer.DefaultTransformation(d.userUrl, reqreader.Record{Values: []string{d.reqUrl}})
 
 			expected := sender.Request{Url: "http://test.com/api/new?param=1&param=2"}
 			if diff := cmp.Diff(expected, actual); diff != "" {
@@ -328,7 +328,7 @@ func TestDefaultTransformationWithIncorrectUrls(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			_, err := transformer.DefaultTransformation(d.userUrl, reader.Record{Values: []string{d.reqUrl}})
+			_, err := transformer.DefaultTransformation(d.userUrl, reqreader.Record{Values: []string{d.reqUrl}})
 			if err == nil {
 				t.Errorf("incorrect result: expected an error")
 			}

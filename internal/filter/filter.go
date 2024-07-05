@@ -1,12 +1,12 @@
 package filter
 
 import (
-	"testpoint/internal/reader"
+	"testpoint/internal/reqreader"
 )
 
 // Filter removes duplicates from the data stream
-func Filter(input <-chan reader.Record) <-chan reader.Record {
-	output := make(chan reader.Record)
+func Filter(input <-chan reqreader.Record) <-chan reqreader.Record {
+	output := make(chan reqreader.Record)
 
 	set := make(map[uint64]interface{})
 

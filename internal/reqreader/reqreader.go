@@ -1,4 +1,4 @@
-package reader
+package reqreader
 
 import (
 	"encoding/csv"
@@ -31,7 +31,7 @@ func (rec Record) String() string {
 	return strings.Join(rec.Values, ", ")
 }
 
-// ReadRequests reads the CSV files and sends the data to the output channel.
+// ReadRequests reads the CSV files with requests and sends the data to the output channel.
 func ReadRequests(path string, withHeader bool) <-chan Record {
 	output := make(chan Record)
 
@@ -67,9 +67,7 @@ func readFile(filename string, withHeader bool, output chan<- Record) error {
 		return err
 	}
 
-	reader := csv.NewReader(file)
-
-	err = readRecords(reader, withHeader, output)
+	err = readRecords(file, withHeader, output)
 	if err != nil {
 		return err
 	}
@@ -77,7 +75,9 @@ func readFile(filename string, withHeader bool, output chan<- Record) error {
 	return nil
 }
 
-func readRecords(reader *csv.Reader, withHeader bool, output chan<- Record) error {
+func readRecords(file *os.File, withHeader bool, output chan<- Record) error {
+	reader := csv.NewReader(file)
+
 	var header []string = nil
 	if withHeader {
 		h, err := reader.Read()

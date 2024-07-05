@@ -4,11 +4,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"testing"
 	"testpoint/internal/filter"
-	"testpoint/internal/reader"
+	"testpoint/internal/reqreader"
 )
 
 func TestFilterWithNoData(t *testing.T) {
-	records := make(chan reader.Record)
+	records := make(chan reqreader.Record)
 	close(records)
 
 	filteredRecords := filter.Filter(records)
@@ -20,16 +20,16 @@ func TestFilterWithNoData(t *testing.T) {
 }
 
 func TestFilter(t *testing.T) {
-	records := make(chan reader.Record)
+	records := make(chan reqreader.Record)
 	go func() {
-		records <- reader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}}
-		records <- reader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "PUT"}}
-		records <- reader.Record{Fields: []string{"url", "method"}, Values: []string{"http://foo.com/api/foo", "GET"}}
-		records <- reader.Record{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}}
-		records <- reader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}}
-		records <- reader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}}
-		records <- reader.Record{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}}
-		records <- reader.Record{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "PUT"}}
+		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}}
+		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "PUT"}}
+		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://foo.com/api/foo", "GET"}}
+		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}}
+		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}}
+		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}}
+		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}}
+		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "PUT"}}
 		close(records)
 	}()
 
@@ -40,7 +40,7 @@ func TestFilter(t *testing.T) {
 		t.Error("incorrect result: expected number of records is 5, got", len(actual))
 	}
 
-	expected := []reader.Record{
+	expected := []reqreader.Record{
 		{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}},
 		{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "PUT"}},
 		{Fields: []string{"url", "method"}, Values: []string{"http://foo.com/api/foo", "GET"}},
@@ -53,8 +53,8 @@ func TestFilter(t *testing.T) {
 	}
 }
 
-func chanToSlice(input <-chan reader.Record) []reader.Record {
-	var slice []reader.Record
+func chanToSlice(input <-chan reqreader.Record) []reqreader.Record {
+	var slice []reqreader.Record
 	for rec := range input {
 		slice = append(slice, rec)
 	}

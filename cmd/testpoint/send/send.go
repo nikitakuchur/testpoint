@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 	"testpoint/internal/filter"
-	"testpoint/internal/reader"
+	"testpoint/internal/reqreader"
+	"testpoint/internal/respwriter"
 	"testpoint/internal/sender"
 	"testpoint/internal/transformer"
-	"testpoint/internal/writer"
 )
 
 type config struct {
@@ -55,13 +55,13 @@ func Command() {
 	log.Printf("configuration: {%v}\n", conf)
 	log.Println("starting to process the requests...")
 
-	records := reader.ReadRequests(conf.input, !conf.noHeader)
+	records := reqreader.ReadRequests(conf.input, !conf.noHeader)
 
 	records = filter.Filter(records)
 
 	requests := transformer.TransformRequests(conf.urls, records, createTransformation(conf.transform))
 	responses := sender.SendRequests(requests, conf.workers)
-	writer.WriteResponses(responses, conf.output)
+	respwriter.WriteResponses(responses, conf.output)
 
 	log.Println("completed")
 	log.Printf("the result is saved in %v", conf.output)

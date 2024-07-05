@@ -1,12 +1,12 @@
-package writer_test
+package respwriter_test
 
 import (
 	"log"
 	"os"
 	"path/filepath"
 	"testing"
+	"testpoint/internal/respwriter"
 	"testpoint/internal/sender"
-	"testpoint/internal/writer"
 )
 
 func TestWriteResponsesWithNoResponses(t *testing.T) {
@@ -15,7 +15,7 @@ func TestWriteResponsesWithNoResponses(t *testing.T) {
 	responses := make(chan sender.RequestResponse)
 	close(responses)
 
-	writer.WriteResponses(responses, tempDir)
+	respwriter.WriteResponses(responses, tempDir)
 
 	filenames := readFilenames(tempDir)
 
@@ -31,28 +31,28 @@ func TestWriteResponsesToOneFile(t *testing.T) {
 	go func() {
 		responses <- sender.RequestResponse{
 			Request: sender.Request{
-				"http://test.com/api/foo",
-				"GET",
-				`{"my_header":"foo"}`,
-				`{"field":"foo"}`,
-				"http://test.com",
+				Url:     "http://test.com/api/foo",
+				Method:  "GET",
+				Headers: `{"my_header":"foo"}`,
+				Body:    `{"field":"foo"}`,
+				UserUrl: "http://test.com",
 			},
-			Response: sender.Response{"200", "Hello world!"},
+			Response: sender.Response{Status: "200", Body: "Hello world!"},
 		}
 		responses <- sender.RequestResponse{
 			Request: sender.Request{
-				"http://test.com/api/bar",
-				"GET",
-				`{"my_header":"bar"}`,
-				`{"field":"bar"}`,
-				"http://test.com",
+				Url:     "http://test.com/api/bar",
+				Method:  "GET",
+				Headers: `{"my_header":"bar"}`,
+				Body:    `{"field":"bar"}`,
+				UserUrl: "http://test.com",
 			},
-			Response: sender.Response{"200", "Goodbye!"},
+			Response: sender.Response{Status: "200", Body: "Goodbye!"},
 		}
 		close(responses)
 	}()
 
-	writer.WriteResponses(responses, tempDir)
+	respwriter.WriteResponses(responses, tempDir)
 
 	filenames := readFilenames(tempDir)
 
@@ -79,28 +79,28 @@ func TestWriteResponsesToMultipleFiles(t *testing.T) {
 	go func() {
 		responses <- sender.RequestResponse{
 			Request: sender.Request{
-				"http://test1.com/api/foo",
-				"GET",
-				`{"my_header":"foo"}`,
-				`{"field":"foo"}`,
-				"http://test1.com",
+				Url:     "http://test1.com/api/foo",
+				Method:  "GET",
+				Headers: `{"my_header":"foo"}`,
+				Body:    `{"field":"foo"}`,
+				UserUrl: "http://test1.com",
 			},
-			Response: sender.Response{"200", "Hello world!"},
+			Response: sender.Response{Status: "200", Body: "Hello world!"},
 		}
 		responses <- sender.RequestResponse{
 			Request: sender.Request{
-				"http://test2.com/api/bar",
-				"GET",
-				`{"my_header":"bar"}`,
-				`{"field":"bar"}`,
-				"http://test2.com",
+				Url:     "http://test2.com/api/bar",
+				Method:  "GET",
+				Headers: `{"my_header":"bar"}`,
+				Body:    `{"field":"bar"}`,
+				UserUrl: "http://test2.com",
 			},
-			Response: sender.Response{"200", "Goodbye!"},
+			Response: sender.Response{Status: "200", Body: "Goodbye!"},
 		}
 		close(responses)
 	}()
 
-	writer.WriteResponses(responses, tempDir)
+	respwriter.WriteResponses(responses, tempDir)
 
 	filenames := readFilenames(tempDir)
 
@@ -136,18 +136,18 @@ func TestWriteResponsesWithNoUrl(t *testing.T) {
 	go func() {
 		responses <- sender.RequestResponse{
 			Request: sender.Request{
-				"http://test.com/api/foo",
-				"GET",
-				`{"my_header":"foo"}`,
-				`{"field":"foo"}`,
-				"",
+				Url:     "http://test.com/api/foo",
+				Method:  "GET",
+				Headers: `{"my_header":"foo"}`,
+				Body:    `{"field":"foo"}`,
+				UserUrl: "",
 			},
-			Response: sender.Response{"200", "Hello world!"},
+			Response: sender.Response{Status: "200", Body: "Hello world!"},
 		}
 		close(responses)
 	}()
 
-	writer.WriteResponses(responses, tempDir)
+	respwriter.WriteResponses(responses, tempDir)
 
 	filenames := readFilenames(tempDir)
 

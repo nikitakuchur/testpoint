@@ -1,11 +1,11 @@
-package reader_test
+package reqreader_test
 
 import (
 	"github.com/google/go-cmp/cmp"
 	"log"
 	"os"
 	"testing"
-	"testpoint/internal/reader"
+	"testpoint/internal/reqreader"
 )
 
 func TestReadRequestsWithHeader(t *testing.T) {
@@ -18,18 +18,18 @@ url,method,headers,body
 /api/test?prefix=sp,GET,"{""my_header"":""test""}","{""field"":""test""}"
 `)
 
-	records := reader.ReadRequests(filename, true)
+	records := reqreader.ReadRequests(filename, true)
 
 	actual := chanToSlice(records)
 	if len(actual) != 4 {
 		t.Error("incorrect result: expected slice size is 4, got", len(actual))
 	}
 
-	expected := []reader.Record{
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test?prefix=te", "PUT", `{"my_header":"test"}`, `{"field":"test"}`}},
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test?prefix=ca", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test?prefix=do", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test?prefix=sp", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
+	expected := []reqreader.Record{
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test?prefix=te", "PUT", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test?prefix=ca", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test?prefix=do", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test?prefix=sp", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
 	}
 
 	if diff := cmp.Diff(expected, actual); diff != "" {
@@ -46,14 +46,14 @@ func TestReadRequestsWithoutHeader(t *testing.T) {
 /api/test?prefix=sp,GET,"{""my_header"":""test""}","{""field"":""test""}"
 `)
 
-	records := reader.ReadRequests(filename, false)
+	records := reqreader.ReadRequests(filename, false)
 
 	actual := chanToSlice(records)
 	if len(actual) != 4 {
 		t.Error("incorrect result: expected slice size is 4, got", len(actual))
 	}
 
-	expected := []reader.Record{
+	expected := []reqreader.Record{
 		{Values: []string{"/api/test?prefix=te", "PUT", `{"my_header":"test"}`, `{"field":"test"}`}},
 		{Values: []string{"/api/test?prefix=ca", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
 		{Values: []string{"/api/test?prefix=do", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
@@ -66,7 +66,7 @@ func TestReadRequestsWithoutHeader(t *testing.T) {
 }
 
 func TestReadRequestsWithEmptyPath(t *testing.T) {
-	records := reader.ReadRequests("", true)
+	records := reqreader.ReadRequests("", true)
 	actual := chanToSlice(records)
 	if len(actual) != 0 {
 		t.Error("incorrect result: expected slice size is 0, got", len(actual))
@@ -77,7 +77,7 @@ func TestReadRequestsWithEmptyFile(t *testing.T) {
 	tempDir := t.TempDir()
 	filename := createTempFile(tempDir, "requests.csv", ``)
 
-	records := reader.ReadRequests(filename, true)
+	records := reqreader.ReadRequests(filename, true)
 
 	actual := chanToSlice(records)
 	if len(actual) != 0 {
@@ -95,7 +95,7 @@ url,method,headers,body,test
 /api/test?prefix=sp,GET,"{""my_header"":""test""}","{""field"":""test""}"
 `)
 
-	records := reader.ReadRequests(filename, true)
+	records := reqreader.ReadRequests(filename, true)
 
 	actual := chanToSlice(records)
 	if len(actual) != 0 {
@@ -120,23 +120,23 @@ url,method,headers,body
 /api/test2?prefix=st,GET,"{""my_header"":""test""}","{""field"":""test""}"
 `)
 
-	records := reader.ReadRequests(tempDir, true)
+	records := reqreader.ReadRequests(tempDir, true)
 
 	actual := chanToSlice(records)
 	if len(actual) != 8 {
 		t.Error("incorrect result: expected number of records is 0, got", len(actual))
 	}
 
-	expected := []reader.Record{
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test?prefix=te", "PUT", `{"my_header":"test"}`, `{"field":"test"}`}},
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test?prefix=ca", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test?prefix=do", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test?prefix=sp", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
+	expected := []reqreader.Record{
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test?prefix=te", "PUT", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test?prefix=ca", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test?prefix=do", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test?prefix=sp", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
 
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test2?prefix=am", "PUT", `{"my_header":"test"}`, `{"field":"test"}`}},
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test2?prefix=in", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test2?prefix=co", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
-		{[]string{"url", "method", "headers", "body"}, []string{"/api/test2?prefix=st", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test2?prefix=am", "PUT", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test2?prefix=in", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test2?prefix=co", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
+		{Fields: []string{"url", "method", "headers", "body"}, Values: []string{"/api/test2?prefix=st", "GET", `{"my_header":"test"}`, `{"field":"test"}`}},
 	}
 
 	if diff := cmp.Diff(expected, actual); diff != "" {
@@ -147,7 +147,7 @@ url,method,headers,body
 func TestReadRequestsFromEmptyDir(t *testing.T) {
 	tempDir := t.TempDir()
 
-	records := reader.ReadRequests(tempDir, true)
+	records := reqreader.ReadRequests(tempDir, true)
 
 	actual := chanToSlice(records)
 	if len(actual) != 0 {
@@ -156,7 +156,7 @@ func TestReadRequestsFromEmptyDir(t *testing.T) {
 }
 
 func TestReadRequestsFromNonexistentDir(t *testing.T) {
-	records := reader.ReadRequests("/this/directory/does/not/exist/", true)
+	records := reqreader.ReadRequests("/this/directory/does/not/exist/", true)
 
 	actual := chanToSlice(records)
 	if len(actual) != 0 {
@@ -180,8 +180,8 @@ func createTempFile(dir string, name string, content string) string {
 	return file.Name()
 }
 
-func chanToSlice(input <-chan reader.Record) []reader.Record {
-	var slice []reader.Record
+func chanToSlice(input <-chan reqreader.Record) []reqreader.Record {
+	var slice []reqreader.Record
 	for rec := range input {
 		slice = append(slice, rec)
 	}

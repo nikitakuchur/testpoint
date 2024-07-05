@@ -1,4 +1,4 @@
-package writer
+package respwriter
 
 import (
 	"encoding/csv"
@@ -53,8 +53,8 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 			writerMap[userUrl] = writer
 
 			writeLine(writer, []string{
-				"request_url", "request_method", "request_headers", "request_body", "request_hash",
-				"response_status", "response_body",
+				"req_url", "req_method", "req_headers", "req_body", "req_hash",
+				"resp_status", "resp_body",
 			})
 		}
 
