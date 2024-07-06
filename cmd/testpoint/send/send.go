@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 	"testpoint/internal/filter"
-	"testpoint/internal/reqreader"
-	"testpoint/internal/respwriter"
+	"testpoint/internal/io/readers/reqreader"
+	"testpoint/internal/io/writers/respwriter"
 	"testpoint/internal/sender"
 	"testpoint/internal/transformer"
 )
@@ -54,6 +54,11 @@ func Command() {
 
 	log.Printf("configuration: {%v}\n", conf)
 	log.Println("starting to process the requests...")
+
+	// TODO: replace it with a mandatory argument
+	if conf.input == "" {
+		log.Fatalln("input has to be specified")
+	}
 
 	records := reqreader.ReadRequests(conf.input, !conf.noHeader)
 

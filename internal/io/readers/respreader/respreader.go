@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-type Record struct {
+type RespRecord struct {
 	ReqUrl     string
 	ReqMethod  string
 	ReqHeaders string
@@ -20,21 +20,17 @@ type Record struct {
 }
 
 // ReadResponses reads the CSV file with responses and sends the data to the output channel.
-func ReadResponses(filename string) <-chan Record {
-	output := make(chan Record)
+func ReadResponses(filename string) <-chan RespRecord {
+	output := make(chan RespRecord)
 
 	go func() {
 		defer close(output)
 
-		if filename == "" {
-			return
-		}
-
 		file, err := os.Open(filename)
 		if err != nil {
-			log.Fatalln("cannot read the given file", err)
+			log.Fatalln(err)
 		}
-		defer closeFile(file)
+		defer file.Close()
 
 		err = readRecords(file, output)
 		if err != nil {
@@ -45,13 +41,19 @@ func ReadResponses(filename string) <-chan Record {
 	return output
 }
 
-func readRecords(file *os.File, output chan<- Record) error {
+func readRecords(file *os.File, output chan<- RespRecord) error {
 	reader := csv.NewReader(file)
 
 	// we need to skip the CSV header
-	_, err := reader.Read()
+	header, err := reader.Read()
+	if err == io.EOF {
+		return nil
+	}
 	if err != nil {
-		return err
+		log.Fatalf("%v: %v", file.Name(), err)
+	}
+	if len(header) < 7 {
+		log.Fatalf("%v: there are missing values", file.Name())
 	}
 
 	for {
@@ -60,25 +62,20 @@ func readRecords(file *os.File, output chan<- Record) error {
 			return nil
 		}
 		if err != nil {
-			return err
+			log.Printf("%v: %v, the record was skipped", file.Name(), err)
+			continue
 		}
 
 		hash, err := strconv.ParseUint(values[4], 10, 64)
 		if err != nil {
-			return err
+			log.Printf("%v: cannot parse the hash value '%v', the record was skipped", file.Name(), values[4])
+			continue
 		}
 
-		rec := Record{
+		rec := RespRecord{
 			values[0], values[1], values[2], values[3], hash,
 			values[5], values[6],
 		}
 		output <- rec
-	}
-}
-
-func closeFile(f *os.File) {
-	err := f.Close()
-	if err != nil {
-		log.Fatalln("cannot close a file:", err)
 	}
 }

@@ -4,11 +4,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"testing"
 	"testpoint/internal/filter"
-	"testpoint/internal/reqreader"
+	"testpoint/internal/io/readers/reqreader"
 )
 
 func TestFilterWithNoData(t *testing.T) {
-	records := make(chan reqreader.Record)
+	records := make(chan reqreader.ReqRecord)
 	close(records)
 
 	filteredRecords := filter.Filter(records)
@@ -20,16 +20,16 @@ func TestFilterWithNoData(t *testing.T) {
 }
 
 func TestFilter(t *testing.T) {
-	records := make(chan reqreader.Record)
+	records := make(chan reqreader.ReqRecord)
 	go func() {
-		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}}
-		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "PUT"}}
-		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://foo.com/api/foo", "GET"}}
-		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}}
-		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}}
-		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}}
-		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}}
-		records <- reqreader.Record{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "PUT"}}
+		records <- reqreader.ReqRecord{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}, Hash: 1}
+		records <- reqreader.ReqRecord{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "PUT"}, Hash: 2}
+		records <- reqreader.ReqRecord{Fields: []string{"url", "method"}, Values: []string{"http://foo.com/api/foo", "GET"}, Hash: 3}
+		records <- reqreader.ReqRecord{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}, Hash: 4}
+		records <- reqreader.ReqRecord{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}, Hash: 1}
+		records <- reqreader.ReqRecord{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}, Hash: 1}
+		records <- reqreader.ReqRecord{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}, Hash: 4}
+		records <- reqreader.ReqRecord{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "PUT"}, Hash: 5}
 		close(records)
 	}()
 
@@ -40,12 +40,12 @@ func TestFilter(t *testing.T) {
 		t.Error("incorrect result: expected number of records is 5, got", len(actual))
 	}
 
-	expected := []reqreader.Record{
-		{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}},
-		{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "PUT"}},
-		{Fields: []string{"url", "method"}, Values: []string{"http://foo.com/api/foo", "GET"}},
-		{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}},
-		{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "PUT"}},
+	expected := []reqreader.ReqRecord{
+		{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "GET"}, Hash: 1},
+		{Fields: []string{"url", "method"}, Values: []string{"http://test.com/api/test", "PUT"}, Hash: 2},
+		{Fields: []string{"url", "method"}, Values: []string{"http://foo.com/api/foo", "GET"}, Hash: 3},
+		{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "GET"}, Hash: 4},
+		{Fields: []string{"url", "method"}, Values: []string{"http://bar.com/api/bar", "PUT"}, Hash: 5},
 	}
 
 	if diff := cmp.Diff(expected, actual); diff != "" {
@@ -53,8 +53,8 @@ func TestFilter(t *testing.T) {
 	}
 }
 
-func chanToSlice(input <-chan reqreader.Record) []reqreader.Record {
-	var slice []reqreader.Record
+func chanToSlice(input <-chan reqreader.ReqRecord) []reqreader.ReqRecord {
+	var slice []reqreader.ReqRecord
 	for rec := range input {
 		slice = append(slice, rec)
 	}

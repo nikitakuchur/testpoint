@@ -11,13 +11,13 @@ import (
 	"strings"
 )
 
-type Record struct {
+type ReqRecord struct {
 	Fields []string
 	Values []string
 	Hash   uint64
 }
 
-func (rec Record) String() string {
+func (rec ReqRecord) String() string {
 	if rec.Fields != nil {
 		var sb strings.Builder
 		for i, field := range rec.Fields {
@@ -32,15 +32,11 @@ func (rec Record) String() string {
 }
 
 // ReadRequests reads the CSV files with requests and sends the data to the output channel.
-func ReadRequests(path string, withHeader bool) <-chan Record {
-	output := make(chan Record)
+func ReadRequests(path string, withHeader bool) <-chan ReqRecord {
+	output := make(chan ReqRecord)
 
 	go func() {
 		defer close(output)
-
-		if path == "" {
-			return
-		}
 
 		filenames, err := readFilenames(path)
 		if err != nil {
@@ -59,9 +55,9 @@ func ReadRequests(path string, withHeader bool) <-chan Record {
 	return output
 }
 
-func readFile(filename string, withHeader bool, output chan<- Record) error {
+func readFile(filename string, withHeader bool, output chan<- ReqRecord) error {
 	file, err := os.Open(filename)
-	defer closeFile(file)
+	defer file.Close()
 
 	if err != nil {
 		return err
@@ -75,7 +71,7 @@ func readFile(filename string, withHeader bool, output chan<- Record) error {
 	return nil
 }
 
-func readRecords(file *os.File, withHeader bool, output chan<- Record) error {
+func readRecords(file *os.File, withHeader bool, output chan<- ReqRecord) error {
 	reader := csv.NewReader(file)
 
 	var header []string = nil
@@ -93,16 +89,17 @@ func readRecords(file *os.File, withHeader bool, output chan<- Record) error {
 			return nil
 		}
 		if err != nil {
-			return err
+			log.Printf("%v, the record was skipped", err)
+			continue
 		}
 
-		rec := Record{Fields: header, Values: values}
+		rec := ReqRecord{Fields: header, Values: values}
 		rec.Hash = hash(rec)
 		output <- rec
 	}
 }
 
-func hash(rec Record) uint64 {
+func hash(rec ReqRecord) uint64 {
 	h := fnv.New64()
 	h.Write([]byte(rec.String()))
 	return h.Sum64()
@@ -140,11 +137,4 @@ func isDir(path string) (bool, error) {
 		return false, err
 	}
 	return stat.IsDir(), nil
-}
-
-func closeFile(f *os.File) {
-	err := f.Close()
-	if err != nil {
-		log.Fatalln("cannot close a file:", err)
-	}
 }

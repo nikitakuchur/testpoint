@@ -4,13 +4,13 @@ import (
 	"errors"
 	"github.com/google/go-cmp/cmp"
 	"testing"
-	"testpoint/internal/reqreader"
+	"testpoint/internal/io/readers/reqreader"
 	"testpoint/internal/sender"
 	"testpoint/internal/transformer"
 )
 
 func TestTransformRequestsWithNoData(t *testing.T) {
-	records := make(chan reqreader.Record)
+	records := make(chan reqreader.ReqRecord)
 	close(records)
 
 	requests := transformer.TransformRequests(nil, records, testTransformation)
@@ -22,10 +22,10 @@ func TestTransformRequestsWithNoData(t *testing.T) {
 }
 
 func TestTransformRequests(t *testing.T) {
-	records := make(chan reqreader.Record)
+	records := make(chan reqreader.ReqRecord)
 	go func() {
-		records <- reqreader.Record{Values: []string{"/api/test1"}}
-		records <- reqreader.Record{Values: []string{"/api/test2"}}
+		records <- reqreader.ReqRecord{Values: []string{"/api/test1"}}
+		records <- reqreader.ReqRecord{Values: []string{"/api/test2"}}
 		close(records)
 	}()
 
@@ -49,10 +49,10 @@ func TestTransformRequests(t *testing.T) {
 }
 
 func TestTransformRequestsWithIncorrectRecords(t *testing.T) {
-	records := make(chan reqreader.Record)
+	records := make(chan reqreader.ReqRecord)
 	go func() {
-		records <- reqreader.Record{Values: []string{"/api/test1"}}
-		records <- reqreader.Record{Values: []string{"/api/test2"}}
+		records <- reqreader.ReqRecord{Values: []string{"/api/test1"}}
+		records <- reqreader.ReqRecord{Values: []string{"/api/test2"}}
 		close(records)
 	}()
 
@@ -64,11 +64,11 @@ func TestTransformRequestsWithIncorrectRecords(t *testing.T) {
 	}
 }
 
-func testTransformation(host string, rec reqreader.Record) (sender.Request, error) {
+func testTransformation(host string, rec reqreader.ReqRecord) (sender.Request, error) {
 	return sender.Request{Url: host + rec.Values[0]}, nil
 }
 
-func errorTransformation(_ string, _ reqreader.Record) (sender.Request, error) {
+func errorTransformation(_ string, _ reqreader.ReqRecord) (sender.Request, error) {
 	return sender.Request{}, errors.New("error")
 }
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"testpoint/internal/respwriter"
+	"testpoint/internal/io/writers/respwriter"
 	"testpoint/internal/sender"
 )
 
@@ -36,6 +36,7 @@ func TestWriteResponsesToOneFile(t *testing.T) {
 				Headers: `{"my_header":"foo"}`,
 				Body:    `{"field":"foo"}`,
 				UserUrl: "http://test.com",
+				Hash:    1234,
 			},
 			Response: sender.Response{Status: "200", Body: "Hello world!"},
 		}
@@ -46,6 +47,7 @@ func TestWriteResponsesToOneFile(t *testing.T) {
 				Headers: `{"my_header":"bar"}`,
 				Body:    `{"field":"bar"}`,
 				UserUrl: "http://test.com",
+				Hash:    5678,
 			},
 			Response: sender.Response{Status: "200", Body: "Goodbye!"},
 		}
@@ -62,9 +64,9 @@ func TestWriteResponsesToOneFile(t *testing.T) {
 
 	actual := readFile(tempDir + "/http-test-com.csv")
 
-	expected := `request_url,request_method,request_headers,request_body,response_status,response_body
-http://test.com/api/foo,GET,"{""my_header"":""foo""}","{""field"":""foo""}",200,Hello world!
-http://test.com/api/bar,GET,"{""my_header"":""bar""}","{""field"":""bar""}",200,Goodbye!
+	expected := `req_url,req_method,req_headers,req_body,req_hash,resp_status,resp_body
+http://test.com/api/foo,GET,"{""my_header"":""foo""}","{""field"":""foo""}",1234,200,Hello world!
+http://test.com/api/bar,GET,"{""my_header"":""bar""}","{""field"":""bar""}",5678,200,Goodbye!
 `
 
 	if actual != expected {
@@ -84,6 +86,7 @@ func TestWriteResponsesToMultipleFiles(t *testing.T) {
 				Headers: `{"my_header":"foo"}`,
 				Body:    `{"field":"foo"}`,
 				UserUrl: "http://test1.com",
+				Hash:    1234,
 			},
 			Response: sender.Response{Status: "200", Body: "Hello world!"},
 		}
@@ -94,6 +97,7 @@ func TestWriteResponsesToMultipleFiles(t *testing.T) {
 				Headers: `{"my_header":"bar"}`,
 				Body:    `{"field":"bar"}`,
 				UserUrl: "http://test2.com",
+				Hash:    5678,
 			},
 			Response: sender.Response{Status: "200", Body: "Goodbye!"},
 		}
@@ -112,11 +116,11 @@ func TestWriteResponsesToMultipleFiles(t *testing.T) {
 		filename string
 		content  string
 	}{
-		{"/http-test1-com.csv", `request_url,request_method,request_headers,request_body,response_status,response_body
-http://test1.com/api/foo,GET,"{""my_header"":""foo""}","{""field"":""foo""}",200,Hello world!
+		{"/http-test1-com.csv", `req_url,req_method,req_headers,req_body,req_hash,resp_status,resp_body
+http://test1.com/api/foo,GET,"{""my_header"":""foo""}","{""field"":""foo""}",1234,200,Hello world!
 `},
-		{"/http-test2-com.csv", `request_url,request_method,request_headers,request_body,response_status,response_body
-http://test2.com/api/bar,GET,"{""my_header"":""bar""}","{""field"":""bar""}",200,Goodbye!
+		{"/http-test2-com.csv", `req_url,req_method,req_headers,req_body,req_hash,resp_status,resp_body
+http://test2.com/api/bar,GET,"{""my_header"":""bar""}","{""field"":""bar""}",5678,200,Goodbye!
 `},
 	}
 
@@ -141,6 +145,7 @@ func TestWriteResponsesWithNoUrl(t *testing.T) {
 				Headers: `{"my_header":"foo"}`,
 				Body:    `{"field":"foo"}`,
 				UserUrl: "",
+				Hash:    1234,
 			},
 			Response: sender.Response{Status: "200", Body: "Hello world!"},
 		}
@@ -157,8 +162,8 @@ func TestWriteResponsesWithNoUrl(t *testing.T) {
 
 	actual := readFile(tempDir + "/output.csv")
 
-	expected := `request_url,request_method,request_headers,request_body,response_status,response_body
-http://test.com/api/foo,GET,"{""my_header"":""foo""}","{""field"":""foo""}",200,Hello world!
+	expected := `req_url,req_method,req_headers,req_body,req_hash,resp_status,resp_body
+http://test.com/api/foo,GET,"{""my_header"":""foo""}","{""field"":""foo""}",1234,200,Hello world!
 `
 
 	if actual != expected {

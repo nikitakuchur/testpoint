@@ -7,9 +7,11 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
-	"testpoint/internal/reqreader"
+	"testpoint/internal/io/readers/reqreader"
 	"testpoint/internal/sender"
 )
+
+type Transformation func(userUrl string, rec reqreader.ReqRecord) (sender.Request, error)
 
 // NewTransformation creates a new transformation from the given JavaScript code.
 // The script must have a function called transform that accepts a user url and a CSV record, and returns an HTTP request.
@@ -26,7 +28,7 @@ func NewTransformation(script string) (Transformation, error) {
 		return nil, errors.New("transform function not found")
 	}
 
-	return func(userUrl string, rec reqreader.Record) (sender.Request, error) {
+	return func(userUrl string, rec reqreader.ReqRecord) (sender.Request, error) {
 		params := createNamedParams(rec)
 
 		var jsRec goja.Value
@@ -97,7 +99,7 @@ func isEmptyValue(v goja.Value) bool {
 // If we don't have a header in the CSV file, the transformation expects the data to be in the following order:
 // URL, HTTP method, headers (in JSON format), body.
 // If we do have a header, then it will look for these fields: url, method, headers, and body.
-func DefaultTransformation(userUrl string, rec reqreader.Record) (sender.Request, error) {
+func DefaultTransformation(userUrl string, rec reqreader.ReqRecord) (sender.Request, error) {
 	params := createNamedParams(rec)
 	if len(params) == 0 {
 		params["url"] = getValue(rec.Values, 0)
@@ -156,7 +158,7 @@ func mergeUrls(requestUrl string, userUrl string) (string, error) {
 	return parsedRequestUrl.String(), nil
 }
 
-func createNamedParams(rec reqreader.Record) map[string]string {
+func createNamedParams(rec reqreader.ReqRecord) map[string]string {
 	params := map[string]string{}
 	if rec.Fields != nil {
 		for i, field := range rec.Fields {
