@@ -34,7 +34,6 @@ func (c config) String() string {
 }
 
 func Command() {
-	inputPtr := flag.String("input", "", "a CSV file or directory with CSV files")
 	noHeaderPtr := flag.Bool("no-header", false, "enable this flag if your CSV file has no header")
 	hostsPtr := flag.String("urls", "", "a list of hosts, separated by commas, to which requests are to be sent")
 	transformPtr := flag.String("transform", "", "a JavaScript file with a request transformation")
@@ -43,8 +42,13 @@ func Command() {
 
 	flag.Parse()
 
+	input := flag.Arg(0)
+	if input == "" {
+		log.Fatalln("input has to be specified")
+	}
+
 	conf := config{
-		*inputPtr,
+		input,
 		*noHeaderPtr,
 		parseUrls(*hostsPtr),
 		*transformPtr,
@@ -54,11 +58,6 @@ func Command() {
 
 	log.Printf("configuration: {%v}\n", conf)
 	log.Println("starting to process the requests...")
-
-	// TODO: replace it with a mandatory argument
-	if conf.input == "" {
-		log.Fatalln("input has to be specified")
-	}
 
 	records := reqreader.ReadRequests(conf.input, !conf.noHeader)
 
