@@ -44,7 +44,7 @@ func Command() {
 
 	input := flag.Arg(0)
 	if input == "" {
-		log.Fatalln("input has to be specified")
+		log.Fatalln("input file or directory has to be specified")
 	}
 
 	conf := config{
