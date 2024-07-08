@@ -6,6 +6,7 @@ import (
 	"testing"
 	"testpoint/internal/io/readers/reqreader"
 	"testpoint/internal/sender"
+	"testpoint/internal/testutils"
 	"testpoint/internal/transformer"
 )
 
@@ -15,7 +16,7 @@ func TestTransformRequestsWithNoData(t *testing.T) {
 
 	requests := transformer.TransformRequests(nil, records, testTransformation)
 
-	var actual = chanToSlice(requests)
+	var actual = testutils.ChanToSlice(requests)
 	if len(actual) != 0 {
 		t.Error("incorrect result: expected number of requests is 0, got", len(actual))
 	}
@@ -31,7 +32,7 @@ func TestTransformRequests(t *testing.T) {
 
 	requests := transformer.TransformRequests([]string{"http://test1.com", "http://test2.com"}, records, testTransformation)
 
-	var actual = chanToSlice(requests)
+	var actual = testutils.ChanToSlice(requests)
 	if len(actual) != 4 {
 		t.Error("incorrect result: expected number of requests is 4, got", len(actual))
 	}
@@ -48,7 +49,7 @@ func TestTransformRequests(t *testing.T) {
 	}
 }
 
-func TestTransformRequestsWithIncorrectRecords(t *testing.T) {
+func TestTransformRequestsWithErrors(t *testing.T) {
 	records := make(chan reqreader.ReqRecord)
 	go func() {
 		records <- reqreader.ReqRecord{Values: []string{"/api/test1"}}
@@ -58,7 +59,7 @@ func TestTransformRequestsWithIncorrectRecords(t *testing.T) {
 
 	requests := transformer.TransformRequests([]string{"http://test1.com", "http://test2.com"}, records, errorTransformation)
 
-	var actual = chanToSlice(requests)
+	var actual = testutils.ChanToSlice(requests)
 	if len(actual) != 0 {
 		t.Error("incorrect result: expected number of requests is 0, got", len(actual))
 	}
@@ -70,12 +71,4 @@ func testTransformation(host string, rec reqreader.ReqRecord) (sender.Request, e
 
 func errorTransformation(_ string, _ reqreader.ReqRecord) (sender.Request, error) {
 	return sender.Request{}, errors.New("error")
-}
-
-func chanToSlice(input <-chan sender.Request) []sender.Request {
-	var slice []sender.Request
-	for req := range input {
-		slice = append(slice, req)
-	}
-	return slice
 }

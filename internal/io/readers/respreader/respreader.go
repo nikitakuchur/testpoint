@@ -2,6 +2,7 @@ package respreader
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -17,6 +18,13 @@ type RespRecord struct {
 
 	RespStatus string
 	RespBody   string
+}
+
+func (r RespRecord) String() string {
+	return fmt.Sprintf(
+		"reqUrl: %v, reqMethod: %v, reqHeaders: %v, reqBody: %v, reqHash: %v, respStatus: %v, respBody: %v",
+		r.ReqUrl, r.ReqMethod, r.ReqHeaders, r.ReqBody, r.ReqHash, r.RespStatus, r.RespBody,
+	)
 }
 
 // ReadResponses reads the CSV file with responses and sends the data to the output channel.

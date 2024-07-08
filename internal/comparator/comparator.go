@@ -1,117 +1,89 @@
 package comparator
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/google/go-cmp/cmp"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"log"
-	"strings"
 	"testpoint/internal/io/readers/respreader"
+	"testpoint/internal/sender"
 )
 
-type Diff struct {
-	A     respreader.RespRecord
-	B     respreader.RespRecord
-	Diffs map[string]string
+type RespDiff struct {
+	Rec1  respreader.RespRecord
+	Rec2  respreader.RespRecord
+	Diffs map[string][]diffmatchpatch.Diff
 }
 
-func (d Diff) String() string {
-	sb := strings.Builder{}
-
-	sb.WriteString(fmt.Sprintf("reqUrlA:\t%s\n", d.A.ReqUrl))
-	sb.WriteString(fmt.Sprintf("reqUrlB:\t%s\n", d.B.ReqUrl))
-	sb.WriteString(fmt.Sprintf("reqMethod:\t%s\n", d.A.ReqMethod))
-	if d.A.ReqHeaders != "" {
-		sb.WriteString(fmt.Sprintf("reqHeaders:\t%s\n", d.A.ReqHeaders))
-	}
-	if d.A.ReqBody != "" {
-		sb.WriteString(fmt.Sprintf("reqBody:\t%s\n", d.A.ReqBody))
-	}
-	sb.WriteString(fmt.Sprintf("reqHash:\t%d\n", d.A.ReqHash))
-
-	for k, v := range d.Diffs {
-		sb.WriteString(fmt.Sprintf("%s:\n", k))
-		sb.WriteString(v)
-	}
-
-	return sb.String()
-}
-
-func CompareResponses(recordsA, recordsB <-chan respreader.RespRecord, respComparator RespComparator) <-chan Diff {
-	output := make(chan Diff)
+func CompareResponses(records1, records2 <-chan respreader.RespRecord, respComparator RespComparator) <-chan RespDiff {
+	output := make(chan RespDiff)
 
 	go func() {
 		cache := make(map[uint64]respreader.RespRecord)
 
-		isAClosed, isBClosed := false, false
+		isRecords1Closed, isRecords2Closed := false, false
 		for {
-			if isAClosed && isBClosed {
+			if isRecords1Closed && isRecords2Closed {
 				break
 			}
 
 			select {
-			case a, ok := <-recordsA:
+			case rec1, ok := <-records1:
 				if !ok {
-					isAClosed = true
+					isRecords1Closed = true
 					continue
 				}
-				b, ok := cache[a.ReqHash]
+				rec2, ok := cache[rec1.ReqHash]
 				if !ok {
-					// we don't have the second record yet, so we need to put this record aside
-					cache[a.ReqHash] = a
+					// we don't have the second record yet, so we need to put this one aside
+					cache[rec1.ReqHash] = rec1
 					break
 				}
-				delete(cache, a.ReqHash)
+				delete(cache, rec1.ReqHash)
 
-				// we have both records, let's compareRecords them
-				compareRecords(a, b, respComparator, output)
-			case b, ok := <-recordsB:
+				// we have both records, let's compare them
+				compareRecords(rec1, rec2, respComparator, output)
+			case rec2, ok := <-records2:
 				if !ok {
-					isBClosed = true
+					isRecords2Closed = true
 					continue
 				}
-				a, ok := cache[b.ReqHash]
+				rec1, ok := cache[rec2.ReqHash]
 				if !ok {
-					cache[b.ReqHash] = b
+					cache[rec2.ReqHash] = rec2
 					break
 				}
-				delete(cache, b.ReqHash)
+				delete(cache, rec2.ReqHash)
 
-				compareRecords(a, b, respComparator, output)
+				compareRecords(rec1, rec2, respComparator, output)
 			}
 		}
-		close(output)
 
-		for _, v := range cache {
-			log.Printf("%v: missing second response", v)
+		for _, rec := range cache {
+			log.Printf("request with hash=%v is missing the second response", rec.ReqHash)
 		}
+
+		close(output)
 	}()
 
 	return output
 }
 
-func compareRecords(a, b respreader.RespRecord, respComparator RespComparator, output chan<- Diff) {
-	diffs := make(map[string]string)
+func compareRecords(rec1, rec2 respreader.RespRecord, respComparator RespComparator, output chan<- RespDiff) {
+	diffs := make(map[string][]diffmatchpatch.Diff)
 	defer func() {
 		if len(diffs) != 0 {
-			output <- Diff{a, b, diffs}
+			output <- RespDiff{rec1, rec2, diffs}
 		}
 	}()
 
-	if diff := cmp.Diff(a.RespStatus, b.RespStatus); diff != "" {
-		diffs["status"] = diff
+	resp1 := sender.Response{Status: rec1.RespStatus, Body: rec1.RespBody}
+	resp2 := sender.Response{Status: rec2.RespStatus, Body: rec2.RespBody}
+
+	respDiffs, err := respComparator(resp1, resp2)
+	if err != nil {
+		log.Printf("%v, the records with hash=%v were skipped", rec1.ReqHash, err)
 		return
 	}
 
-	// if one of the bodies is not a JSON, then we compareRecords them as strings
-	if !json.Valid([]byte(a.RespBody)) || !json.Valid([]byte(b.RespBody)) {
-		if diff := cmp.Diff(a.RespBody, b.RespBody); diff != "" {
-			diffs["body"] = diff
-		}
-		return
-	}
-
-	respDiffs := respComparator(a, b)
 	for k, v := range respDiffs {
 		diffs[k] = v
 	}

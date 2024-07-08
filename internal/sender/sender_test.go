@@ -56,7 +56,7 @@ func TestSendRequests(t *testing.T) {
 		requests <- sender.Request{
 			Url:     server.URL,
 			Method:  "GET",
-			Headers: `{"my_header":"foo"}`,
+			Headers: `{"myHeader":"foo"}`,
 		}
 		close(requests)
 	}()
@@ -70,7 +70,7 @@ func TestSendRequests(t *testing.T) {
 	}
 	expected := []sender.RequestResponse{
 		{
-			sender.Request{Url: server.URL, Method: "GET", Headers: `{"my_header":"foo"}`},
+			sender.Request{Url: server.URL, Method: "GET", Headers: `{"myHeader":"foo"}`},
 			sender.Response{Status: "200 OK", Body: "Hello world!"},
 		},
 	}

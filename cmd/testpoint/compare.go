@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"strings"
 	"testpoint/internal/comparator"
 	"testpoint/internal/io/readers/respreader"
 )
@@ -44,7 +46,7 @@ func newCompareCmd() *cobra.Command {
 			diffs := comparator.CompareResponses(records1, records2, createRespComparator(conf.comparator))
 
 			for diff := range diffs {
-				log.Print("MISMATCH:\n", diff)
+				printMismatch(diff)
 			}
 
 			log.Println("completed")
@@ -77,4 +79,27 @@ func readComparatorScript(filename string) string {
 		log.Fatalln("cannot read the comparator script:", err)
 	}
 	return string(script)
+}
+
+func printMismatch(d comparator.RespDiff) {
+	sb := strings.Builder{}
+
+	sb.WriteString(fmt.Sprintf("reqUrl1:\t%s\n", d.Rec1.ReqUrl))
+	sb.WriteString(fmt.Sprintf("reqUrl2:\t%s\n", d.Rec2.ReqUrl))
+	sb.WriteString(fmt.Sprintf("reqMethod:\t%s\n", d.Rec1.ReqMethod))
+	if d.Rec1.ReqHeaders != "" {
+		sb.WriteString(fmt.Sprintf("reqHeaders:\t%s\n", d.Rec1.ReqHeaders))
+	}
+	if d.Rec1.ReqBody != "" {
+		sb.WriteString(fmt.Sprintf("reqBody:\t%s\n", d.Rec1.ReqBody))
+	}
+	sb.WriteString(fmt.Sprintf("reqHash:\t%d\n", d.Rec1.ReqHash))
+
+	dmp := diffmatchpatch.New()
+	for k, v := range d.Diffs {
+		sb.WriteString(fmt.Sprintf("%s:\n", k))
+		sb.WriteString(dmp.DiffPrettyText(v))
+	}
+
+	log.Print("MISMATCH:\n", sb.String())
 }

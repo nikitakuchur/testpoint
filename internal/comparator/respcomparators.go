@@ -1,18 +1,21 @@
 package comparator
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/dop251/goja"
 	"github.com/google/go-cmp/cmp"
-	"log"
-	"testpoint/internal/io/readers/respreader"
+	"github.com/sergi/go-diff/diffmatchpatch"
+	"reflect"
+	"testpoint/internal/sender"
 )
 
-type RespComparator func(a, b respreader.RespRecord) map[string]string
+type RespComparator func(resp1, resp2 sender.Response) (map[string][]diffmatchpatch.Diff, error)
 
 func NewRespComparator(script string) (RespComparator, error) {
 	vm := goja.New()
+	vm.SetFieldNameMapper(goja.UncapFieldNameMapper())
 
 	_, err := vm.RunString(script)
 	if err != nil {
@@ -24,50 +27,88 @@ func NewRespComparator(script string) (RespComparator, error) {
 		return nil, errors.New("compare function not found")
 	}
 
-	err = vm.Set("diff", func(x, y any) string {
-		return cmp.Diff(makePretty(x), makePretty(y))
+	err = vm.Set("diff", func(x, y any) []diffmatchpatch.Diff {
+		if d := cmp.Diff(x, y); d != "" {
+			if x != nil && y != nil && reflect.TypeOf(x).Kind() == reflect.String && reflect.TypeOf(y).Kind() == reflect.String {
+				return diff(makeJsonPretty(x.(string)), makeJsonPretty(y.(string)))
+			}
+			return diff(toJson(x), toJson(y))
+		}
+		return nil
 	})
 	if err != nil {
-		log.Fatalln("cannot set a diff function for js")
+		return nil, errors.New("cannot set the diff function for js: " + err.Error())
 	}
 
-	return func(a, b respreader.RespRecord) map[string]string {
-		result, err := compare(goja.Undefined(), vm.ToValue(a.RespBody), vm.ToValue(b.RespBody))
+	return func(resp1, resp2 sender.Response) (map[string][]diffmatchpatch.Diff, error) {
+		result, err := compare(goja.Undefined(), vm.ToValue(resp1), vm.ToValue(resp2))
 		if err != nil {
-			log.Fatal(err)
+			return nil, errors.New("JavaScript runtime error: " + err.Error())
 		}
 
-		return readDiffs(vm, result)
+		return readDiffs(vm, result), nil
 	}, nil
 }
 
-func readDiffs(vm *goja.Runtime, value goja.Value) map[string]string {
-	obj := value.ToObject(vm)
+func toJson(v any) string {
+	b, err := json.MarshalIndent(v, "", "    ")
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
 
-	m := make(map[string]string)
+func readDiffs(vm *goja.Runtime, v goja.Value) map[string][]diffmatchpatch.Diff {
+	if v == nil || goja.IsNull(v) || goja.IsUndefined(v) {
+		return nil
+	}
+
+	obj := v.ToObject(vm)
+
+	m := make(map[string][]diffmatchpatch.Diff)
 	for _, k := range obj.Keys() {
-		v := obj.Get(k).String()
-		if v != "" {
-			m[k] = obj.Get(k).String()
+		v := obj.Get(k)
+		t := v.ExportType()
+		if t.Kind() == reflect.Slice && t.Elem() == reflect.TypeOf(diffmatchpatch.Diff{}) {
+			diffs := obj.Get(k).Export().([]diffmatchpatch.Diff)
+			if len(diffs) != 0 {
+				m[k] = diffs
+			}
 		}
 	}
 
 	return m
 }
 
-func DefaultRespComparator(a, b respreader.RespRecord) map[string]string {
-	diffs := make(map[string]string)
-	if diff := cmp.Diff(makePretty(a.RespBody), makePretty(b.RespBody)); diff != "" {
-		diffs["body"] = diff
+func DefaultRespComparator(resp1, resp2 sender.Response) (map[string][]diffmatchpatch.Diff, error) {
+	result := make(map[string][]diffmatchpatch.Diff)
+
+	if resp1.Status != resp2.Status {
+		result["status"] = diff(resp1.Status, resp2.Status)
+		return result, nil
 	}
-	return diffs
+
+	if resp1.Body != resp2.Body {
+		body1, body2 := resp1.Body, resp2.Body
+		if json.Valid([]byte(body1)) && json.Valid([]byte(body2)) {
+			body1, body2 = makeJsonPretty(resp1.Body), makeJsonPretty(resp2.Body)
+		}
+		result["body"] = diff(body1, body2)
+	}
+
+	return result, nil
 }
 
-func makePretty(v any) string {
-	b, err := json.MarshalIndent(v, "", "    ")
-	if err != nil {
-		return ""
-	}
+func diff(text1, text2 string) []diffmatchpatch.Diff {
+	dmp := diffmatchpatch.New()
+	return dmp.DiffMain(text1, text2, false)
+}
 
-	return string(b)
+func makeJsonPretty(str string) string {
+	buff := bytes.Buffer{}
+	err := json.Indent(&buff, []byte(str), "", "    ")
+	if err != nil {
+		return str
+	}
+	return buff.String()
 }

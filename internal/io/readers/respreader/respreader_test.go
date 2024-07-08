@@ -11,10 +11,10 @@ func TestReadResponses(t *testing.T) {
 	tempDir := t.TempDir()
 	filename := testutils.CreateTempFile(tempDir, "responses.csv", `
 req_url,req_method,req_headers,req_body,req_hash,resp_status,resp_body
-http://localhost:8080/api/test?prefix=te,PUT,"{""my_header"":""test1""}","{""field"":""test1""}",123,"200","[1,2,3]"
-http://localhost:8080/api/test?prefix=ca,GET,"{""my_header"":""test2""}","{""field"":""test2""}",234,"404","[4,5,6]"
-http://localhost:8080/api/test?prefix=do,DELETE,"{""my_header"":""test3""}","{""field"":""test3""}",345,"500","[7,8,9]"
-http://localhost:8080/api/test?prefix=sp,HEAD,"{""my_header"":""test4""}","{""field"":""test4""}",456,"201","[10,11,12]"
+http://localhost:8080/api/test?prefix=te,PUT,"{""myHeader"":""test1""}","{""field"":""test1""}",123,"200","[1,2,3]"
+http://localhost:8080/api/test?prefix=ca,GET,"{""myHeader"":""test2""}","{""field"":""test2""}",234,"404","[4,5,6]"
+http://localhost:8080/api/test?prefix=do,DELETE,"{""myHeader"":""test3""}","{""field"":""test3""}",345,"500","[7,8,9]"
+http://localhost:8080/api/test?prefix=sp,HEAD,"{""myHeader"":""test4""}","{""field"":""test4""}",456,"201","[10,11,12]"
 `)
 
 	records := respreader.ReadResponses(filename)
@@ -28,7 +28,7 @@ http://localhost:8080/api/test?prefix=sp,HEAD,"{""my_header"":""test4""}","{""fi
 		{
 			ReqUrl:     "http://localhost:8080/api/test?prefix=te",
 			ReqMethod:  "PUT",
-			ReqHeaders: `{"my_header":"test1"}`,
+			ReqHeaders: `{"myHeader":"test1"}`,
 			ReqBody:    `{"field":"test1"}`,
 			ReqHash:    123,
 			RespStatus: "200",
@@ -37,7 +37,7 @@ http://localhost:8080/api/test?prefix=sp,HEAD,"{""my_header"":""test4""}","{""fi
 		{
 			ReqUrl:     "http://localhost:8080/api/test?prefix=ca",
 			ReqMethod:  "GET",
-			ReqHeaders: `{"my_header":"test2"}`,
+			ReqHeaders: `{"myHeader":"test2"}`,
 			ReqBody:    `{"field":"test2"}`,
 			ReqHash:    234,
 			RespStatus: "404",
@@ -46,7 +46,7 @@ http://localhost:8080/api/test?prefix=sp,HEAD,"{""my_header"":""test4""}","{""fi
 		{
 			ReqUrl:     "http://localhost:8080/api/test?prefix=do",
 			ReqMethod:  "DELETE",
-			ReqHeaders: `{"my_header":"test3"}`,
+			ReqHeaders: `{"myHeader":"test3"}`,
 			ReqBody:    `{"field":"test3"}`,
 			ReqHash:    345,
 			RespStatus: "500",
@@ -55,7 +55,7 @@ http://localhost:8080/api/test?prefix=sp,HEAD,"{""my_header"":""test4""}","{""fi
 		{
 			ReqUrl:     "http://localhost:8080/api/test?prefix=sp",
 			ReqMethod:  "HEAD",
-			ReqHeaders: `{"my_header":"test4"}`,
+			ReqHeaders: `{"myHeader":"test4"}`,
 			ReqBody:    `{"field":"test4"}`,
 			ReqHash:    456,
 			RespStatus: "201",
@@ -72,10 +72,10 @@ func TestReadRequestsWithWithIncorrectRecords(t *testing.T) {
 	tempDir := t.TempDir()
 	filename := testutils.CreateTempFile(tempDir, "responses.csv", `
 req_url,req_method,req_headers,req_body,req_hash,resp_status,resp_body
-http://localhost:8080/api/test?prefix=te,PUT,"{""my_header"":""test1""}","{""field"":""test1""}",test,"200","[1,2,3]"
-http://localhost:8080/api/test?prefix=ca,GET,"{""my_header"":""test2""}","{""field"":""test2""}",234,"404"
-http://localhost:8080/api/test?prefix=do,DELETE,"{""my_header"":""test3""}","{""field"":""test3""}",345,"500","[7,8,9]"
-http://localhost:8080/api/test?prefix=sp,HEAD,"{""my_header"":""test4""}","{""field"":""test4""}",456,"201","[10,11,12]""
+http://localhost:8080/api/test?prefix=te,PUT,"{""myHeader"":""test1""}","{""field"":""test1""}",test,"200","[1,2,3]"
+http://localhost:8080/api/test?prefix=ca,GET,"{""myHeader"":""test2""}","{""field"":""test2""}",234,"404"
+http://localhost:8080/api/test?prefix=do,DELETE,"{""myHeader"":""test3""}","{""field"":""test3""}",345,"500","[7,8,9]"
+http://localhost:8080/api/test?prefix=sp,HEAD,"{""myHeader"":""test4""}","{""field"":""test4""}",456,"201","[10,11,12]""
 `)
 
 	records := respreader.ReadResponses(filename)
@@ -89,7 +89,7 @@ http://localhost:8080/api/test?prefix=sp,HEAD,"{""my_header"":""test4""}","{""fi
 		{
 			ReqUrl:     "http://localhost:8080/api/test?prefix=do",
 			ReqMethod:  "DELETE",
-			ReqHeaders: `{"my_header":"test3"}`,
+			ReqHeaders: `{"myHeader":"test3"}`,
 			ReqBody:    `{"field":"test3"}`,
 			ReqHash:    345,
 			RespStatus: "500",

@@ -21,7 +21,7 @@ function transform(host, record) {
 `)
 
 	record := reqreader.ReqRecord{
-		Values: []string{"/api/test", "PUT", `{"test_header":"test_value"}`, "Hello world!"},
+		Values: []string{"/api/test", "PUT", `{"testHeader":"testValue"}`, "Hello world!"},
 	}
 
 	actual, _ := transformation("http://test.com", record)
@@ -29,7 +29,7 @@ function transform(host, record) {
 	expected := sender.Request{
 		Url:     "http://test.com/api/test",
 		Method:  "PUT",
-		Headers: `{"test_header":"test_value"}`,
+		Headers: `{"testHeader":"testValue"}`,
 		Body:    "Hello world!",
 	}
 
@@ -52,7 +52,7 @@ function transform(host, record) {
 
 	record := reqreader.ReqRecord{
 		Fields: []string{"url", "method", "headers", "body"},
-		Values: []string{"/api/test", "PUT", `{"test_header":"test_value"}`, "Hello world!"},
+		Values: []string{"/api/test", "PUT", `{"testHeader":"testValue"}`, "Hello world!"},
 	}
 
 	actual, _ := transformation("http://test.com", record)
@@ -60,7 +60,7 @@ function transform(host, record) {
 	expected := sender.Request{
 		Url:     "http://test.com/api/test",
 		Method:  "PUT",
-		Headers: `{"test_header":"test_value"}`,
+		Headers: `{"testHeader":"testValue"}`,
 		Body:    "Hello world!",
 	}
 
@@ -76,7 +76,7 @@ function transform(host, record) {
 		url: host + record[0],
 		method: record[1],
 		headers: {
-			"test_header": "test_value"
+			"testHeader": "testValue"
 		},
 		body: record[2]
 	};
@@ -92,7 +92,7 @@ function transform(host, record) {
 	expected := sender.Request{
 		Url:     "http://test.com/api/test",
 		Method:  "PUT",
-		Headers: `{"test_header":"test_value"}`,
+		Headers: `{"testHeader":"testValue"}`,
 		Body:    "Hello world!",
 	}
 
@@ -231,10 +231,10 @@ function transform(host, record) {
 
 func TestDefaultTransformation(t *testing.T) {
 	records := []reqreader.ReqRecord{{
-		Values: []string{"/api/test", "PUT", `{"test_header":"test_value"}`, "Hello world!"},
+		Values: []string{"/api/test", "PUT", `{"testHeader":"testValue"}`, "Hello world!"},
 	}, {
 		Fields: []string{"body", "headers", "method", "url"},
-		Values: []string{"Hello world!", `{"test_header":"test_value"}`, "PUT", "/api/test"},
+		Values: []string{"Hello world!", `{"testHeader":"testValue"}`, "PUT", "/api/test"},
 	}}
 
 	for _, record := range records {
@@ -243,7 +243,7 @@ func TestDefaultTransformation(t *testing.T) {
 		expected := sender.Request{
 			Url:     "http://test.com/api/test",
 			Method:  "PUT",
-			Headers: `{"test_header":"test_value"}`,
+			Headers: `{"testHeader":"testValue"}`,
 			Body:    "Hello world!",
 		}
 
@@ -256,7 +256,7 @@ func TestDefaultTransformation(t *testing.T) {
 func TestDefaultTransformationWithFields(t *testing.T) {
 	record := reqreader.ReqRecord{
 		Fields: []string{"body", "headers", "method", "url"},
-		Values: []string{"Hello world!", `{"test_header":"test_value"}`, "PUT", "/api/test"},
+		Values: []string{"Hello world!", `{"testHeader":"testValue"}`, "PUT", "/api/test"},
 	}
 
 	actual, _ := transformer.DefaultTransformation("http://test.com", record)
@@ -264,7 +264,7 @@ func TestDefaultTransformationWithFields(t *testing.T) {
 	expected := sender.Request{
 		Url:     "http://test.com/api/test",
 		Method:  "PUT",
-		Headers: `{"test_header":"test_value"}`,
+		Headers: `{"testHeader":"testValue"}`,
 		Body:    "Hello world!",
 	}
 	if diff := cmp.Diff(expected, actual); diff != "" {
