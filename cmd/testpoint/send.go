@@ -62,7 +62,7 @@ func newSendCmd() *cobra.Command {
 	flags.BoolVar(&conf.noHeader, "no-header", false, "enable this flag if your CSV file has no header")
 	flags.StringVarP(&conf.transformation, "transformation", "t", "", "a JavaScript file with a request transformation")
 	flags.IntVarP(&conf.workers, "workers", "w", 1, "a number of workers to send requests")
-	flags.StringVarP(&conf.output, "output", "o", "./", "a directory where the output files need to be saved")
+	flags.StringVar(&conf.output, "output-dir", "./", "a directory where the output files need to be saved")
 
 	return cmd
 }

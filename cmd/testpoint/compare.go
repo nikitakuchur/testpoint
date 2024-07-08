@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
-	"strings"
 	"testpoint/internal/comparator"
 	"testpoint/internal/io/readers/respreader"
+	"testpoint/internal/io/writers/reporter"
 )
 
 type compareConfig struct {
@@ -45,18 +44,21 @@ func newCompareCmd() *cobra.Command {
 			records2 := respreader.ReadResponses(conf.file2)
 			diffs := comparator.CompareResponses(records1, records2, createRespComparator(conf.comparator))
 
-			for diff := range diffs {
-				printMismatch(diff)
+			reporters := []reporter.Reporter{reporter.LogReporter{}}
+
+			if conf.output != "" {
+				reporters = append(reporters, reporter.NewCsvReporter(conf.output))
 			}
 
+			reporter.GenerateReport(diffs, reporters...)
+
 			log.Println("completed")
-			//log.Printf("the result is saved in %v", conf.output)
 		},
 	}
 
 	flags := cmd.Flags()
 	flags.StringVarP(&conf.comparator, "comparator", "c", "", "a JavaScript file with a response comparator")
-	flags.StringVarP(&conf.output, "output", "o", "./", "a directory where the output files need to be saved")
+	flags.StringVar(&conf.output, "csv-report", "", "output a comparison report to a CSV file")
 
 	return cmd
 }
@@ -79,57 +81,4 @@ func readComparatorScript(filename string) string {
 		log.Fatalln("cannot read the comparator script:", err)
 	}
 	return string(script)
-}
-
-func printMismatch(d comparator.RespDiff) {
-	sb := strings.Builder{}
-
-	sb.WriteString(fmt.Sprintf("reqUrl1:\t%s\n", d.Rec1.ReqUrl))
-	sb.WriteString(fmt.Sprintf("reqUrl2:\t%s\n", d.Rec2.ReqUrl))
-	sb.WriteString(fmt.Sprintf("reqMethod:\t%s\n", d.Rec1.ReqMethod))
-	if d.Rec1.ReqHeaders != "" {
-		sb.WriteString(fmt.Sprintf("reqHeaders:\t%s\n", d.Rec1.ReqHeaders))
-	}
-	if d.Rec1.ReqBody != "" {
-		sb.WriteString(fmt.Sprintf("reqBody:\t%s\n", d.Rec1.ReqBody))
-	}
-	sb.WriteString(fmt.Sprintf("reqHash:\t%d\n", d.Rec1.ReqHash))
-
-	dmp := diffmatchpatch.New()
-	for k, v := range d.Diffs {
-		sb.WriteString(fmt.Sprintf("%s:", k))
-		sb.WriteString(dmp.DiffPrettyText(shortenDiffs(v)))
-	}
-
-	log.Print("MISMATCH:\n", sb.String())
-}
-
-func shortenDiffs(diffs []diffmatchpatch.Diff) []diffmatchpatch.Diff {
-	result := make([]diffmatchpatch.Diff, len(diffs))
-	for i, d := range diffs {
-		result[i].Type = d.Type
-		result[i].Text = d.Text
-		if d.Type != diffmatchpatch.DiffEqual {
-			continue
-		}
-		substrings := strings.Split(d.Text, "\n")
-		if len(substrings) > 8 {
-			switch i {
-			case 0:
-				removedLines := len(substrings) - 3
-				tail := strings.Join(substrings[len(substrings)-3:], "\n")
-				result[i].Text = fmt.Sprintf("\n... // %d identical lines\n %s", removedLines, tail)
-			case len(diffs) - 1:
-				removedLines := len(substrings) - 3
-				head := strings.Join(substrings[:3], "\n")
-				result[i].Text = fmt.Sprintf(" %s \n... // %d identical lines\n", head, removedLines)
-			default:
-				removedLines := len(substrings) - 6
-				head := strings.Join(substrings[:3], "\n")
-				tail := strings.Join(substrings[len(substrings)-3:], "\n")
-				result[i].Text = fmt.Sprintf(" %s \n... // %d identical lines\n %s", head, removedLines, tail)
-			}
-		}
-	}
-	return result
 }
