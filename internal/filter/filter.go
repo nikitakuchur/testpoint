@@ -4,7 +4,7 @@ import (
 	"testpoint/internal/io/readers/reqreader"
 )
 
-// Filter removes duplicates from the data stream
+// Filter removes duplicates from the data stream.
 func Filter(input <-chan reqreader.ReqRecord) <-chan reqreader.ReqRecord {
 	output := make(chan reqreader.ReqRecord)
 

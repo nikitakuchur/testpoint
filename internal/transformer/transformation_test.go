@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewTransformationWithoutFields(t *testing.T) {
-	transformation, _ := transformer.NewTransformation(`
+	transformation, _ := transformer.NewReqTransformation(`
 function transform(host, record) {
 	return {
 		url: host + record[0],
@@ -39,7 +39,7 @@ function transform(host, record) {
 }
 
 func TestNewTransformationWithFields(t *testing.T) {
-	transformation, _ := transformer.NewTransformation(`
+	transformation, _ := transformer.NewReqTransformation(`
 function transform(host, record) {
 	return {
 		url: host + record['url'],
@@ -70,7 +70,7 @@ function transform(host, record) {
 }
 
 func TestNewTransformationWithHeadersAsObject(t *testing.T) {
-	transformation, _ := transformer.NewTransformation(`
+	transformation, _ := transformer.NewReqTransformation(`
 function transform(host, record) {
 	return {
 		url: host + record[0],
@@ -159,7 +159,7 @@ function transform(host, record) {
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			transformation, _ := transformer.NewTransformation(d.script)
+			transformation, _ := transformer.NewReqTransformation(d.script)
 			record := reqreader.ReqRecord{
 				Values: []string{"/api/test", "PUT", "Hello world!"},
 			}
@@ -178,7 +178,7 @@ function transform(host, record) {
 func TestNewTransformationWithCreationError(t *testing.T) {
 	scripts := []string{"-=24wsfs", ""}
 	for _, script := range scripts {
-		_, err := transformer.NewTransformation(script)
+		_, err := transformer.NewReqTransformation(script)
 		if err == nil {
 			t.Errorf("incorrect result: expected an error")
 		}
@@ -186,7 +186,7 @@ func TestNewTransformationWithCreationError(t *testing.T) {
 }
 
 func TestNewTransformationWithRuntimeError(t *testing.T) {
-	transformation, _ := transformer.NewTransformation(`
+	transformation, _ := transformer.NewReqTransformation(`
 function transform(host, record) {
 	const a = null;
 	a.test();
@@ -205,7 +205,7 @@ function transform(host, record) {
 }
 
 func TestNewTransformationWithMarshallingError(t *testing.T) {
-	transformation, _ := transformer.NewTransformation(`
+	transformation, _ := transformer.NewReqTransformation(`
 function transform(host, record) {
 	const obj = {};
 	obj.self = obj;
@@ -238,7 +238,7 @@ func TestDefaultTransformation(t *testing.T) {
 	}}
 
 	for _, record := range records {
-		actual, _ := transformer.DefaultTransformation("http://test.com", record)
+		actual, _ := transformer.DefaultReqTransformation("http://test.com", record)
 
 		expected := sender.Request{
 			Url:     "http://test.com/api/test",
@@ -259,7 +259,7 @@ func TestDefaultTransformationWithFields(t *testing.T) {
 		Values: []string{"Hello world!", `{"testHeader":"testValue"}`, "PUT", "/api/test"},
 	}
 
-	actual, _ := transformer.DefaultTransformation("http://test.com", record)
+	actual, _ := transformer.DefaultReqTransformation("http://test.com", record)
 
 	expected := sender.Request{
 		Url:     "http://test.com/api/test",
@@ -275,7 +275,7 @@ func TestDefaultTransformationWithFields(t *testing.T) {
 func TestDefaultTransformationWithEmptyRecord(t *testing.T) {
 	record := reqreader.ReqRecord{}
 
-	actual, _ := transformer.DefaultTransformation("http://test.com", record)
+	actual, _ := transformer.DefaultReqTransformation("http://test.com", record)
 
 	expected := sender.Request{Url: "http://test.com"}
 	if diff := cmp.Diff(expected, actual); diff != "" {
@@ -304,7 +304,7 @@ func TestDefaultTransformationWithUrlMerging(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			actual, _ := transformer.DefaultTransformation(d.userUrl, reqreader.ReqRecord{Values: []string{d.reqUrl}})
+			actual, _ := transformer.DefaultReqTransformation(d.userUrl, reqreader.ReqRecord{Values: []string{d.reqUrl}})
 
 			expected := sender.Request{Url: "http://test.com/api/new?param=1&param=2"}
 			if diff := cmp.Diff(expected, actual); diff != "" {
@@ -328,7 +328,7 @@ func TestDefaultTransformationWithIncorrectUrls(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			_, err := transformer.DefaultTransformation(d.userUrl, reqreader.ReqRecord{Values: []string{d.reqUrl}})
+			_, err := transformer.DefaultReqTransformation(d.userUrl, reqreader.ReqRecord{Values: []string{d.reqUrl}})
 			if err == nil {
 				t.Errorf("incorrect result: expected an error")
 			}

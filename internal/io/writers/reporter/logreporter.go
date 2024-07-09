@@ -8,6 +8,7 @@ import (
 	"testpoint/internal/comparator"
 )
 
+// LogReporter represents a reporter that simply logs all mismatches.
 type LogReporter struct {
 }
 

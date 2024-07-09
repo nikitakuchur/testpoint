@@ -7,12 +7,14 @@ import (
 	"testpoint/internal/sender"
 )
 
+// RespDiff is the result of comparing two response records.
 type RespDiff struct {
 	Rec1  respreader.RespRecord
 	Rec2  respreader.RespRecord
 	Diffs map[string][]diffmatchpatch.Diff
 }
 
+// CompareResponses compares responses from the given channels using the specified response comparator.
 func CompareResponses(records1, records2 <-chan respreader.RespRecord, respComparator RespComparator) <-chan RespDiff {
 	output := make(chan RespDiff)
 

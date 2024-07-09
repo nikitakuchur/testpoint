@@ -8,6 +8,7 @@ import (
 	"testpoint/internal/comparator"
 )
 
+// CsvReporter represents a reporter that writes mismatched records to a CSV file.
 type CsvReporter struct {
 	filename string
 }

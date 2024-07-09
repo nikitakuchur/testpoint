@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// ReqRecord represents a request record from an input CSV file.
 type ReqRecord struct {
 	Fields []string
 	Values []string

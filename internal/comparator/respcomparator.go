@@ -11,8 +11,13 @@ import (
 	"testpoint/internal/sender"
 )
 
+// RespComparator is a function that performs comparison of two responses.
 type RespComparator func(resp1, resp2 sender.Response) (map[string][]diffmatchpatch.Diff, error)
 
+// NewRespComparator creates a new response comparator from the given JavaScript code.
+// The script must have a function called 'compare' that accepts two responses and returns a map of diffs.
+// The map of diffs can contain anything the user is interested in comparing.
+// They can name keys as they want and use the 'diff' function to generate the diff.
 func NewRespComparator(script string) (RespComparator, error) {
 	vm := goja.New()
 	vm.SetFieldNameMapper(goja.UncapFieldNameMapper())
@@ -80,6 +85,7 @@ func readDiffs(vm *goja.Runtime, v goja.Value) map[string][]diffmatchpatch.Diff 
 	return m
 }
 
+// DefaultRespComparator is a comparator that should be used by default if a custom comparator is not provided.
 func DefaultRespComparator(resp1, resp2 sender.Response) (map[string][]diffmatchpatch.Diff, error) {
 	result := make(map[string][]diffmatchpatch.Diff)
 

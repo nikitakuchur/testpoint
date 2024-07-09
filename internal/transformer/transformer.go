@@ -8,7 +8,7 @@ import (
 
 // TransformRequests reads raw request data from the input channel,
 // transforms it into requests using the given transformation and sends it to the output channel.
-func TransformRequests(userUrls []string, input <-chan reqreader.ReqRecord, transformation Transformation) <-chan sender.Request {
+func TransformRequests(userUrls []string, input <-chan reqreader.ReqRecord, transformation ReqTransformation) <-chan sender.Request {
 	output := make(chan sender.Request)
 
 	go func() {

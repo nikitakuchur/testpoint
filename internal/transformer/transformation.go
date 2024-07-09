@@ -11,11 +11,12 @@ import (
 	"testpoint/internal/sender"
 )
 
-type Transformation func(userUrl string, rec reqreader.ReqRecord) (sender.Request, error)
+// ReqTransformation is a function that transforms an input record to an HTTP request.
+type ReqTransformation func(userUrl string, rec reqreader.ReqRecord) (sender.Request, error)
 
-// NewTransformation creates a new transformation from the given JavaScript code.
-// The script must have a function called transform that accepts a user url and a CSV record, and returns an HTTP request.
-func NewTransformation(script string) (Transformation, error) {
+// NewReqTransformation creates a new transformation from the given JavaScript code.
+// The script must have a function called 'transform' that accepts a user url and a CSV record, and returns an HTTP request.
+func NewReqTransformation(script string) (ReqTransformation, error) {
 	vm := goja.New()
 
 	_, err := vm.RunString(script)
@@ -95,11 +96,11 @@ func isEmptyValue(v goja.Value) bool {
 	return v == nil || goja.IsNull(v) || goja.IsUndefined(v)
 }
 
-// DefaultTransformation transforms a raw record to an HTTP request.
+// DefaultReqTransformation is a transformation that should be used by default if a custom transformation is not provided.
 // If we don't have a header in the CSV file, the transformation expects the data to be in the following order:
 // URL, HTTP method, headers (in JSON format), body.
 // If we do have a header, then it will look for these fields: url, method, headers, and body.
-func DefaultTransformation(userUrl string, rec reqreader.ReqRecord) (sender.Request, error) {
+func DefaultReqTransformation(userUrl string, rec reqreader.ReqRecord) (sender.Request, error) {
 	params := createNamedParams(rec)
 	if len(params) == 0 {
 		params["url"] = getValue(rec.Values, 0)

@@ -5,6 +5,8 @@ import (
 	"testpoint/internal/comparator"
 )
 
+// Reporter is an interface that can report mismatches in different ways depending on the implementation.
+// For example, we might want to log mismatches, or write them to a CSV file.
 type Reporter interface {
 	report(input <-chan comparator.RespDiff)
 }

@@ -67,12 +67,12 @@ func newSendCmd() *cobra.Command {
 	return cmd
 }
 
-func createTransformation(filepath string) transformer.Transformation {
+func createTransformation(filepath string) transformer.ReqTransformation {
 	if filepath == "" {
-		return transformer.DefaultTransformation
+		return transformer.DefaultReqTransformation
 	}
 	script := readTransformationScript(filepath)
-	transformation, err := transformer.NewTransformation(script)
+	transformation, err := transformer.NewReqTransformation(script)
 	if err != nil {
 		log.Fatalln(err)
 	}
