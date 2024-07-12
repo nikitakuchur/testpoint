@@ -30,3 +30,12 @@ func CreateTempFile(dir string, name string, content string) string {
 	}
 	return file.Name()
 }
+
+// ReadFile reads a the given file.
+func ReadFile(filepath string) string {
+	bytes, err := os.ReadFile(filepath)
+	if err != nil {
+		log.Fatalf("cannot read a file")
+	}
+	return string(bytes)
+}

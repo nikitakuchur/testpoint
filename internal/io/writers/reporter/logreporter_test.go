@@ -20,10 +20,10 @@ func TestLogReporter_Report(t *testing.T) {
 	go func() {
 		diffs <- comparator.RespDiff{
 			Rec1: respreader.RespRecord{
-				ReqUrl: "http://test1.com", ReqMethod: "GET", ReqHeaders: "headers", ReqBody: "body", ReqHash: 123,
+				ReqUrl: "http://test1.com", ReqMethod: "GET", ReqHeaders: "headers", ReqBody: "body", ReqHash: 123, RespStatus: "200",
 			},
 			Rec2: respreader.RespRecord{
-				ReqUrl: "http://test2.com", ReqMethod: "GET", ReqHeaders: "headers", ReqBody: "body", ReqHash: 123,
+				ReqUrl: "http://test2.com", ReqMethod: "GET", ReqHeaders: "headers", ReqBody: "body", ReqHash: 123, RespStatus: "404",
 			},
 			Diffs: map[string][]diffmatchpatch.Diff{
 				"status": {

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"testpoint/internal/io/writers/respwriter"
 	"testpoint/internal/sender"
+	"testpoint/internal/testutils"
 )
 
 func TestWriteResponsesWithNoResponses(t *testing.T) {
@@ -62,7 +63,7 @@ func TestWriteResponsesToOneFile(t *testing.T) {
 		t.Error("incorrect result: expected number of files is 1, got", len(filenames))
 	}
 
-	actual := readFile(tempDir + "/http-test-com.csv")
+	actual := testutils.ReadFile(tempDir + "/http-test-com.csv")
 
 	expected := `req_url,req_method,req_headers,req_body,req_hash,resp_status,resp_body
 http://test.com/api/foo,GET,"{""myHeader"":""foo""}","{""field"":""foo""}",1234,200,Hello world!
@@ -70,7 +71,7 @@ http://test.com/api/bar,GET,"{""myHeader"":""bar""}","{""field"":""bar""}",5678,
 `
 
 	if actual != expected {
-		t.Errorf("incorrect result:\n expected: %v\nactual: %v", expected, actual)
+		t.Errorf("incorrect result:\nexpected: %v\nactual: %v", expected, actual)
 	}
 }
 
@@ -125,10 +126,10 @@ http://test2.com/api/bar,GET,"{""myHeader"":""bar""}","{""field"":""bar""}",5678
 	}
 
 	for _, e := range expected {
-		actual := readFile(tempDir + e.filename)
+		actual := testutils.ReadFile(tempDir + e.filename)
 
 		if actual != e.content {
-			t.Errorf("incorrect result:\n expected: %v\nactual: %v", e.content, actual)
+			t.Errorf("incorrect result:\nexpected: %v\nactual: %v", e.content, actual)
 		}
 	}
 }
@@ -160,23 +161,15 @@ func TestWriteResponsesWithNoUrl(t *testing.T) {
 		t.Error("incorrect result: expected number of files is 1, got", len(filenames))
 	}
 
-	actual := readFile(tempDir + "/output.csv")
+	actual := testutils.ReadFile(tempDir + "/output.csv")
 
 	expected := `req_url,req_method,req_headers,req_body,req_hash,resp_status,resp_body
 http://test.com/api/foo,GET,"{""myHeader"":""foo""}","{""field"":""foo""}",1234,200,Hello world!
 `
 
 	if actual != expected {
-		t.Errorf("incorrect result:\n expected: %v\nactual: %v", expected, actual)
+		t.Errorf("incorrect result:\nexpected: %v\nactual: %v", expected, actual)
 	}
-}
-
-func readFile(filepath string) string {
-	bytes, err := os.ReadFile(filepath)
-	if err != nil {
-		log.Fatalf("cannot read a file")
-	}
-	return string(bytes)
 }
 
 func readFilenames(path string) []string {
