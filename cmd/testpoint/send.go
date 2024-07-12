@@ -18,7 +18,7 @@ type sendConfig struct {
 	urls           []string
 	transformation string
 	workers        int
-	output         string
+	outputDir      string
 }
 
 func (c sendConfig) String() string {
@@ -28,7 +28,7 @@ func (c sendConfig) String() string {
 	}
 	return fmt.Sprintf(
 		"input: '%v', noHeader: %v, urls: %v, transform: %v, workers: %v, output: '%v'",
-		c.input, c.noHeader, c.urls, transformation, c.workers, c.output,
+		c.input, c.noHeader, c.urls, transformation, c.workers, c.outputDir,
 	)
 }
 
@@ -49,12 +49,12 @@ func newSendCmd() *cobra.Command {
 
 			records := reqreader.ReadRequests(conf.input, !conf.noHeader)
 			records = filter.Filter(records)
-			requests := transformer.TransformRequests(conf.urls, records, createTransformation(conf.transformation))
+			requests := transformer.TransformRequests(conf.urls, records, createReqTransformation(conf.transformation))
 			responses := sender.SendRequests(requests, conf.workers)
-			respwriter.WriteResponses(responses, conf.output)
+			respwriter.WriteResponses(responses, conf.outputDir)
 
+			log.Printf("the result was saved in %v", conf.outputDir)
 			log.Println("completed")
-			log.Printf("the result was saved in %v", conf.output)
 		},
 	}
 
@@ -62,12 +62,12 @@ func newSendCmd() *cobra.Command {
 	flags.BoolVar(&conf.noHeader, "no-header", false, "enable this flag if your CSV file has no header")
 	flags.StringVarP(&conf.transformation, "transformation", "t", "", "a JavaScript file with a request transformation")
 	flags.IntVarP(&conf.workers, "workers", "w", 1, "a number of workers to send requests")
-	flags.StringVar(&conf.output, "output-dir", "./", "a directory where the output files need to be saved")
+	flags.StringVar(&conf.outputDir, "output-dir", "./", "a directory where the output files need to be saved")
 
 	return cmd
 }
 
-func createTransformation(filepath string) transformer.ReqTransformation {
+func createReqTransformation(filepath string) transformer.ReqTransformation {
 	if filepath == "" {
 		return transformer.DefaultReqTransformation
 	}

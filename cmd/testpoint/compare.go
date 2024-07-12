@@ -44,7 +44,7 @@ func newCompareCmd() *cobra.Command {
 			records2 := respreader.ReadResponses(conf.file2)
 			diffs := comparator.CompareResponses(records1, records2, createRespComparator(conf.comparator))
 
-			reporters := []reporter.Reporter{reporter.LogReporter{}}
+			reporters := []reporter.Reporter{reporter.NewLogReporter(log.Default())}
 
 			if conf.output != "" {
 				reporters = append(reporters, reporter.NewCsvReporter(conf.output))

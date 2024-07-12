@@ -17,11 +17,13 @@ func NewCsvReporter(filename string) CsvReporter {
 	return CsvReporter{filename: filename}
 }
 
-func (r CsvReporter) report(input <-chan comparator.RespDiff) {
+func (r CsvReporter) Report(input <-chan comparator.RespDiff) {
 	file := createFile(r.filename)
 	defer file.Close()
 
 	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
 	writeLine(writer, []string{
 		"req_url_1", "req_url_2", "req_method", "req_headers", "req_body", "req_hash",
 		"resp_status_1", "resp_body_1",
