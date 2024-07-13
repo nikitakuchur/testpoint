@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 	"testpoint/internal/comparator"
+	"testpoint/internal/io/readers/respreader"
 )
 
 // LogReporter represents a reporter that simply logs all mismatches.
@@ -26,16 +27,17 @@ func (r LogReporter) Report(input <-chan comparator.RespDiff) {
 func buildMismatch(d comparator.RespDiff) string {
 	sb := strings.Builder{}
 
-	sb.WriteString(fmt.Sprintf("reqUrl1:\t%s\n", d.Rec1.ReqUrl))
-	sb.WriteString(fmt.Sprintf("reqUrl2:\t%s\n", d.Rec2.ReqUrl))
-	sb.WriteString(fmt.Sprintf("reqMethod:\t%s\n", d.Rec1.ReqMethod))
-	if d.Rec1.ReqHeaders != "" {
-		sb.WriteString(fmt.Sprintf("reqHeaders:\t%s\n", d.Rec1.ReqHeaders))
+	if d.Rec1 == d.Rec2 {
+		sb.WriteString("req:\n")
+		writeRequest(&sb, d.Rec1)
+	} else {
+		sb.WriteString("req1:\n")
+		writeRequest(&sb, d.Rec1)
+		sb.WriteString("\nreq2:\n")
+		writeRequest(&sb, d.Rec2)
 	}
-	if d.Rec1.ReqBody != "" {
-		sb.WriteString(fmt.Sprintf("reqBody:\t%s\n", d.Rec1.ReqBody))
-	}
-	sb.WriteString(fmt.Sprintf("reqHash:\t%d\n", d.Rec1.ReqHash))
+
+	sb.WriteString(fmt.Sprintf("\nhash: \t%d\n", d.Rec1.ReqHash))
 
 	dmp := diffmatchpatch.New()
 	for k, v := range d.Diffs {
@@ -50,6 +52,17 @@ func buildMismatch(d comparator.RespDiff) string {
 	}
 
 	return sb.String()
+}
+
+func writeRequest(sb *strings.Builder, rec respreader.RespRecord) {
+	sb.WriteString(fmt.Sprintf("\turl:\t%s\n", rec.ReqUrl))
+	sb.WriteString(fmt.Sprintf("\tmethod:\t%s\n", rec.ReqMethod))
+	if rec.ReqHeaders != "" {
+		sb.WriteString(fmt.Sprintf("\theaders:\t%s\n", rec.ReqHeaders))
+	}
+	if rec.ReqBody != "" {
+		sb.WriteString(fmt.Sprintf("\tbody:\t%s\n", rec.ReqBody))
+	}
 }
 
 func shortenDiff(diff []diffmatchpatch.Diff) []diffmatchpatch.Diff {
