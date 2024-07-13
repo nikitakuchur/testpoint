@@ -190,7 +190,7 @@ If there are any differences in responses, the mismatches will be printed in you
 As you can see in the screenshot, there are a few differences between the two responses: the JSON object with `id` 42
 has appeared, and the object with `id` 45 is no longer there.
 
-If you want to collect all the mismatched responses you can add the `--csv-report` flag when you run the command,
+If you want to collect all the mismatched responses into a file, you can add the `--csv-report` flag when you run the command,
 specifying the name of the output CSV file:
 
 ```shell

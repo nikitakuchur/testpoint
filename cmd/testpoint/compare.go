@@ -14,7 +14,7 @@ type compareConfig struct {
 	file1      string
 	file2      string
 	comparator string
-	output     string
+	csvReport  string
 }
 
 func (c compareConfig) String() string {
@@ -22,7 +22,7 @@ func (c compareConfig) String() string {
 	if comp == "" {
 		comp = "default"
 	}
-	return fmt.Sprintf("file1: '%v', file2: %v, comparator: %v, output: '%v'", c.file1, c.file2, comp, c.output)
+	return fmt.Sprintf("file1: '%v', file2: %v, comparator: %v, csvReport: '%v'", c.file1, c.file2, comp, c.csvReport)
 }
 
 func newCompareCmd() *cobra.Command {
@@ -46,8 +46,8 @@ func newCompareCmd() *cobra.Command {
 
 			reporters := []reporter.Reporter{reporter.NewLogReporter(log.Default())}
 
-			if conf.output != "" {
-				reporters = append(reporters, reporter.NewCsvReporter(conf.output))
+			if conf.csvReport != "" {
+				reporters = append(reporters, reporter.NewCsvReporter(conf.csvReport))
 			}
 
 			reporter.GenerateReport(diffs, reporters...)
@@ -58,7 +58,7 @@ func newCompareCmd() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVarP(&conf.comparator, "comparator", "c", "", "a JavaScript file with a response comparator")
-	flags.StringVar(&conf.output, "csv-report", "", "output a comparison report to a CSV file")
+	flags.StringVar(&conf.csvReport, "csv-report", "", "output a comparison report to a CSV file")
 
 	return cmd
 }
