@@ -40,9 +40,10 @@ func TestLogReporter_Report(t *testing.T) {
 
 	rep.Report(diffs)
 
-	expected := "MISMATCH:\nreqUrl1:\thttp://test1.com\nreqUrl2:\thttp://test2.com" +
-		"\nreqMethod:\tGET\nreqHeaders:\theaders\nreqBody:\tbody\nreqHash:\t123\n" +
-		"status:\n\t\u001B[31m20\u001B[0m\u001B[32m4\u001B[0m0\u001B[32m4\u001B[0m\n"
+	expected := "MISMATCH:\n" +
+		"req1:\n\turl:\thttp://test1.com\n\tmethod:\tGET\n\theaders:\theaders\n\tbody:\tbody\n\n" +
+		"req2:\n\turl:\thttp://test2.com\n\tmethod:\tGET\n\theaders:\theaders\n\tbody:\tbody\n\n" +
+		"hash: \t123\nstatus:\n\t\u001B[31m20\u001B[0m\u001B[32m4\u001B[0m0\u001B[32m4\u001B[0m\n"
 
 	if diff := cmp.Diff(expected, buff.String()); diff != "" {
 		t.Error(diff)
