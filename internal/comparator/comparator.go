@@ -14,8 +14,13 @@ type RespDiff struct {
 	Diffs map[string][]diffmatchpatch.Diff
 }
 
+// Comparator is responsible for performing comparison of two responses.
+type Comparator interface {
+	Compare(resp1, resp2 sender.Response) (map[string][]diffmatchpatch.Diff, error)
+}
+
 // CompareResponses compares responses from the given channels using the specified response comparator.
-func CompareResponses(records1, records2 <-chan respreader.RespRecord, respComparator RespComparator) <-chan RespDiff {
+func CompareResponses(records1, records2 <-chan respreader.RespRecord, comparator Comparator) <-chan RespDiff {
 	output := make(chan RespDiff)
 
 	go func() {
@@ -42,7 +47,7 @@ func CompareResponses(records1, records2 <-chan respreader.RespRecord, respCompa
 				delete(cache, rec1.ReqHash)
 
 				// we have both records, let's compare them
-				compareRecords(rec1, rec2, respComparator, output)
+				compareRecords(rec1, rec2, comparator, output)
 			case rec2, ok := <-records2:
 				if !ok {
 					isRecords2Closed = true
@@ -55,7 +60,7 @@ func CompareResponses(records1, records2 <-chan respreader.RespRecord, respCompa
 				}
 				delete(cache, rec2.ReqHash)
 
-				compareRecords(rec1, rec2, respComparator, output)
+				compareRecords(rec1, rec2, comparator, output)
 			}
 		}
 
@@ -69,7 +74,7 @@ func CompareResponses(records1, records2 <-chan respreader.RespRecord, respCompa
 	return output
 }
 
-func compareRecords(rec1, rec2 respreader.RespRecord, respComparator RespComparator, output chan<- RespDiff) {
+func compareRecords(rec1, rec2 respreader.RespRecord, comparator Comparator, output chan<- RespDiff) {
 	diffs := make(map[string][]diffmatchpatch.Diff)
 	defer func() {
 		if len(diffs) != 0 {
@@ -80,7 +85,7 @@ func compareRecords(rec1, rec2 respreader.RespRecord, respComparator RespCompara
 	resp1 := sender.Response{Status: rec1.RespStatus, Body: rec1.RespBody}
 	resp2 := sender.Response{Status: rec2.RespStatus, Body: rec2.RespBody}
 
-	respDiffs, err := respComparator(resp1, resp2)
+	respDiffs, err := comparator.Compare(resp1, resp2)
 	if err != nil {
 		log.Printf("%v, the records with hash=%v were skipped", rec1.ReqHash, err)
 		return

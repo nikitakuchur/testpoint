@@ -8,7 +8,7 @@ import (
 	"testpoint/internal/comparator"
 	"testpoint/internal/io/readers/respreader"
 	"testpoint/internal/sender"
-	"testpoint/internal/testutils"
+	testutils "testpoint/internal/utils/testing"
 )
 
 func TestCompareResponses(t *testing.T) {
@@ -26,7 +26,7 @@ func TestCompareResponses(t *testing.T) {
 		close(records2)
 	}()
 
-	diffs := comparator.CompareResponses(records1, records2, comparator.DefaultRespComparator)
+	diffs := comparator.CompareResponses(records1, records2, comparator.NewDefaultComparator(false))
 
 	var actual = testutils.ChanToSlice(diffs)
 	if len(actual) != 2 {
@@ -74,7 +74,7 @@ func TestCompareResponsesWithMissingRecords(t *testing.T) {
 		close(records2)
 	}()
 
-	diffs := comparator.CompareResponses(records1, records2, comparator.DefaultRespComparator)
+	diffs := comparator.CompareResponses(records1, records2, comparator.NewDefaultComparator(false))
 
 	var actual = testutils.ChanToSlice(diffs)
 	if len(actual) != 1 {
@@ -99,6 +99,13 @@ func TestCompareResponsesWithMissingRecords(t *testing.T) {
 	}
 }
 
+type ErrorRespComparator struct {
+}
+
+func (ErrorRespComparator) Compare(_, _ sender.Response) (map[string][]diffmatchpatch.Diff, error) {
+	return nil, errors.New("error")
+}
+
 func TestCompareResponsesWithErrors(t *testing.T) {
 	records1 := make(chan respreader.RespRecord)
 	records2 := make(chan respreader.RespRecord)
@@ -114,14 +121,10 @@ func TestCompareResponsesWithErrors(t *testing.T) {
 		close(records2)
 	}()
 
-	diffs := comparator.CompareResponses(records1, records2, errorRespComparator)
+	diffs := comparator.CompareResponses(records1, records2, ErrorRespComparator{})
 
 	var actual = testutils.ChanToSlice(diffs)
 	if len(actual) != 0 {
 		t.Error("incorrect result: expected number of diffs is 0, got", len(actual))
 	}
-}
-
-func errorRespComparator(_, _ sender.Response) (map[string][]diffmatchpatch.Diff, error) {
-	return nil, errors.New("error")
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"testing"
 	"testpoint/internal/io/readers/respreader"
-	"testpoint/internal/testutils"
+	testutils "testpoint/internal/utils/testing"
 )
 
 func TestReadResponses(t *testing.T) {

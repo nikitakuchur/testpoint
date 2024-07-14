@@ -6,7 +6,7 @@ import (
 	"testpoint/internal/comparator"
 	"testpoint/internal/io/readers/respreader"
 	"testpoint/internal/io/writers/reporter"
-	"testpoint/internal/testutils"
+	testutils "testpoint/internal/utils/testing"
 )
 
 func TestCsvReporter_Report(t *testing.T) {

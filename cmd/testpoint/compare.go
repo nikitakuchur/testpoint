@@ -11,10 +11,11 @@ import (
 )
 
 type compareConfig struct {
-	file1      string
-	file2      string
-	comparator string
-	csvReport  string
+	file1       string
+	file2       string
+	comparator  string
+	ignoreOrder bool
+	csvReport   string
 }
 
 func (c compareConfig) String() string {
@@ -22,7 +23,10 @@ func (c compareConfig) String() string {
 	if comp == "" {
 		comp = "default"
 	}
-	return fmt.Sprintf("file1: '%v', file2: %v, comparator: %v, csvReport: '%v'", c.file1, c.file2, comp, c.csvReport)
+	return fmt.Sprintf(
+		"file1: '%v', file2: %v, comparator: %v, ignoreOrder: %v, csvReport: '%v'",
+		c.file1, c.file2, comp, c.ignoreOrder, c.csvReport,
+	)
 }
 
 func newCompareCmd() *cobra.Command {
@@ -42,7 +46,7 @@ func newCompareCmd() *cobra.Command {
 
 			records1 := respreader.ReadResponses(conf.file1)
 			records2 := respreader.ReadResponses(conf.file2)
-			diffs := comparator.CompareResponses(records1, records2, createRespComparator(conf.comparator))
+			diffs := comparator.CompareResponses(records1, records2, createRespComparator(conf.comparator, conf.ignoreOrder))
 
 			reporters := []reporter.Reporter{reporter.NewLogReporter(log.Default())}
 
@@ -58,17 +62,18 @@ func newCompareCmd() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVarP(&conf.comparator, "comparator", "c", "", "a JavaScript file with a response comparator")
+	flags.BoolVar(&conf.ignoreOrder, "ignore-order", false, "enable this flag if you want to ignore array order during comparison.")
 	flags.StringVar(&conf.csvReport, "csv-report", "", "output a comparison report to a CSV file")
 
 	return cmd
 }
 
-func createRespComparator(filepath string) comparator.RespComparator {
+func createRespComparator(filepath string, ignoreOrder bool) comparator.Comparator {
 	if filepath == "" {
-		return comparator.DefaultRespComparator
+		return comparator.NewDefaultComparator(ignoreOrder)
 	}
 	script := readComparatorScript(filepath)
-	respComparator, err := comparator.NewRespComparator(script)
+	respComparator, err := comparator.NewScriptComparator(script, ignoreOrder)
 	if err != nil {
 		log.Fatalln(err)
 	}

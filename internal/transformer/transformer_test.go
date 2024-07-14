@@ -6,8 +6,8 @@ import (
 	"testing"
 	"testpoint/internal/io/readers/reqreader"
 	"testpoint/internal/sender"
-	"testpoint/internal/testutils"
 	"testpoint/internal/transformer"
+	testutils "testpoint/internal/utils/testing"
 )
 
 func TestTransformRequestsWithNoData(t *testing.T) {

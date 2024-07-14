@@ -7,7 +7,7 @@ import (
 	"testing"
 	"testpoint/internal/io/writers/respwriter"
 	"testpoint/internal/sender"
-	"testpoint/internal/testutils"
+	testutils "testpoint/internal/utils/testing"
 )
 
 func TestWriteResponsesWithNoResponses(t *testing.T) {
