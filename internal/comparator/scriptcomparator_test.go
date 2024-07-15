@@ -12,10 +12,10 @@ func TestNewScriptComparatorWithStatus(t *testing.T) {
 	comp, _ := comparator.NewScriptComparator(`
 function compare(resp1, resp2) {
 	return {
-		"status": diff(resp1.status, resp2.status)
+		"status": {x:resp1.status, y:resp2.status}
 	};
 }
-`, false)
+`)
 
 	rec1 := sender.Response{
 		Status: "200",
@@ -44,10 +44,10 @@ func TestNewScriptComparatorWithBody(t *testing.T) {
 	comp, _ := comparator.NewScriptComparator(`
 function compare(resp1, resp2) {
 	return {
-		"body": diff(resp1.body, resp2.body)
+		"body": {x: resp1.body, y: resp2.body}
 	};
 }
-`, false)
+`)
 
 	rec1 := sender.Response{
 		Status: "200",
@@ -80,11 +80,11 @@ function compare(resp1, resp2) {
 	const body1 = JSON.parse(resp1.body);
 	const body2 = JSON.parse(resp2.body);
 	return {
-		"body.testValue1": diff(body1.testValue1, body2.testValue1),
-		"body.testValue2": diff(body1.testValue2, body2.testValue2)
+		"body.testValue1": {x: body1.testValue1, y: body2.testValue1},
+		"body.testValue2": {x: body1.testValue2, y: body2.testValue2}
 	};
 }
-`, false)
+`)
 
 	rec1 := sender.Response{
 		Status: "200",
@@ -124,10 +124,10 @@ func TestNewScriptComparatorWithEqualValues(t *testing.T) {
 	comp, _ := comparator.NewScriptComparator(`
 function compare(resp1, resp2) {
 	return {
-		"status": diff("123", "123")
+		"status": {x: "123", y: "123"}
 	};
 }
-`, false)
+`)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -140,10 +140,10 @@ func TestNewScriptComparatorWithDifferentTypes(t *testing.T) {
 	comp, _ := comparator.NewScriptComparator(`
 function compare(resp1, resp2) {
 	return {
-		"status": diff("123", 123)
+		"status": {x: "123", y: 123}
 	};
 }
-`, false)
+`)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -163,10 +163,10 @@ func TestNewScriptComparatorWithNull(t *testing.T) {
 	comp, _ := comparator.NewScriptComparator(`
 function compare(resp1, resp2) {
 	return {
-		"test": diff("123", null)
+		"test": {x: "123", y: null}
 	};
 }
-`, false)
+`)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -186,10 +186,10 @@ func TestNewScriptComparatorWithUndefined(t *testing.T) {
 	comp, _ := comparator.NewScriptComparator(`
 function compare(resp1, resp2) {
 	return {
-		"test": diff("123", undefined)
+		"test": {x: "123", y: undefined}
 	};
 }
-`, false)
+`)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -215,10 +215,10 @@ function compare(resp1, resp2) {
 		test: "456"
 	};
 	return {
-		"objects": diff(foo, bar)
+		"objects": {x: foo, y: bar}
 	};
 }
-`, false)
+`)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -242,10 +242,10 @@ function compare(resp1, resp2) {
 	const foo = [1, 2, 3, 4, 5, 6]
 	const bar = [1, 0, 3, 4, 5, 6]
 	return {
-		"arrays": diff(foo, bar)
+		"arrays": {x: foo, y: bar}
 	};
 }
-`, false)
+`)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -296,7 +296,7 @@ function compare(resp1, resp2) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			comp, _ := comparator.NewScriptComparator(d.script, false)
+			comp, _ := comparator.NewScriptComparator(d.script)
 			actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
 			if len(actual) != 0 {
@@ -309,7 +309,7 @@ function compare(resp1, resp2) {
 func TestNewScriptComparatorWithCreationError(t *testing.T) {
 	scripts := []string{"-=24wsfs", ""}
 	for _, script := range scripts {
-		_, err := comparator.NewScriptComparator(script, false)
+		_, err := comparator.NewScriptComparator(script)
 		if err == nil {
 			t.Errorf("incorrect result: expected an error")
 		}
@@ -322,7 +322,7 @@ function compare(resp1, resp2) {
 	const a = null;
 	a.test();
 }
-`, false)
+`)
 
 	_, err := comp.Compare(sender.Response{}, sender.Response{})
 

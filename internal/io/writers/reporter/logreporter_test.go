@@ -41,9 +41,9 @@ func TestLogReporter_Report(t *testing.T) {
 	rep.Report(diffs)
 
 	expected := "MISMATCH:\n" +
-		"req1:\n\turl:\thttp://test1.com\n\tmethod:\tGET\n\theaders:\theaders\n\tbody:\tbody\n\n" +
-		"req2:\n\turl:\thttp://test2.com\n\tmethod:\tGET\n\theaders:\theaders\n\tbody:\tbody\n\n" +
-		"hash: \t123\nstatus:\n\t\u001B[31m20\u001B[0m\u001B[32m4\u001B[0m0\u001B[32m4\u001B[0m\n"
+		"req1:\n\turl: http://test1.com\n\tmethod: GET\n\theaders: headers\n\tbody: body\n" +
+		"req2:\n\turl: http://test2.com\n\tmethod: GET\n\theaders: headers\n\tbody: body\n\n" +
+		"hash: \t123\n\nstatus:\n\t\u001B[31m20\n\t\u001B[0m\u001B[32m4\n\t\u001B[0m0\n\t\u001B[32m4\n\t\u001B[0m\n"
 
 	if diff := cmp.Diff(expected, buff.String()); diff != "" {
 		t.Error(diff)
@@ -62,7 +62,8 @@ rebellion
 overlook
 sandwich
 venture
-incredible`,
+incredible
+`,
 		},
 		{
 			Type: diffmatchpatch.DiffInsert,
@@ -79,7 +80,8 @@ demonstrate
 falsify
 election
 unlawful
-profile`,
+profile
+`,
 		},
 		{
 			Type: diffmatchpatch.DiffDelete,
@@ -108,11 +110,12 @@ acquisition`,
 			Text: `... // 6 identical lines
 sandwich
 venture
-incredible`,
+incredible
+`,
 		},
 		{
 			Type: diffmatchpatch.DiffInsert,
-			Text: "neighbour",
+			Text: "neighbour\n",
 		},
 		{
 			Type: diffmatchpatch.DiffEqual,
@@ -122,18 +125,20 @@ graphic
 ... // 4 identical lines
 election
 unlawful
-profile`,
+profile
+`,
 		},
 		{
 			Type: diffmatchpatch.DiffDelete,
-			Text: "definite",
+			Text: "definite\n",
 		},
 		{
 			Type: diffmatchpatch.DiffEqual,
 			Text: `loyalty
 default
 overview
-... // 7 identical lines`,
+... // 7 identical lines
+`,
 		},
 	}
 

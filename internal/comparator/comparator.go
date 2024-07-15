@@ -74,20 +74,20 @@ func CompareResponses(records1, records2 <-chan respreader.RespRecord, comparato
 	return output
 }
 
-func compareRecords(rec1, rec2 respreader.RespRecord, comparator Comparator, output chan<- RespDiff) {
+func compareRecords(x, y respreader.RespRecord, comparator Comparator, output chan<- RespDiff) {
 	diffs := make(map[string][]diffmatchpatch.Diff)
 	defer func() {
 		if len(diffs) != 0 {
-			output <- RespDiff{rec1, rec2, diffs}
+			output <- RespDiff{x, y, diffs}
 		}
 	}()
 
-	resp1 := sender.Response{Status: rec1.RespStatus, Body: rec1.RespBody}
-	resp2 := sender.Response{Status: rec2.RespStatus, Body: rec2.RespBody}
+	resp1 := sender.Response{Status: x.RespStatus, Body: x.RespBody}
+	resp2 := sender.Response{Status: y.RespStatus, Body: y.RespBody}
 
 	respDiffs, err := comparator.Compare(resp1, resp2)
 	if err != nil {
-		log.Printf("%v, the records with hash=%v were skipped", rec1.ReqHash, err)
+		log.Printf("%v, the records with hash=%v were skipped", x.ReqHash, err)
 		return
 	}
 
