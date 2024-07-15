@@ -16,13 +16,13 @@ written because they didn't cover the full range of the application’s function
 
 One of the common solutions that we had was writing a Python script that sends prepared requests (we usually took them
 from production access logs) to both the verified version of the app and the new one. The script collected the responses
-and then compared them to ensure that there were no differences and the new version of the app is safe to release and
+and then compared them to ensure that there were no differences and the new version of the app was safe to release and
 deploy in production.
 
 We often performed the same kind of testing, in addition to automated tests, when we needed to rewrite a legacy
 application. This approach helped us catch many bugs that would have been quite difficult to detect otherwise.
 
-After writing multiple Python scripts like that, I realised that we were wasting our time by doing the same work over
+After writing multiple Python scripts in that way, I realised that we were wasting our time by doing the same work over
 and over again. Moreover, the scripts were quite slow (it was Python, after all), and we had to waste even more time
 waiting for them to finish. That's why I decided to create Testpoint.
 
@@ -32,7 +32,7 @@ Testpoint can be useful in the following scenarios:
 
 * You've made significant changes that don't alter the behaviour of the endpoints in question, and you need to test that
   they still work as expected.
-* You've rewritten a legacy application, and you need to ensure that the endpoints respond in exactly the same way.
+* You've rewritten a legacy application and you need to ensure that the endpoints respond in exactly the same way.
 
 Note that not every REST endpoint is suitable for this kind of testing. If you want to test an endpoint, make sure that
 it's **idempotent** and **consistent**, i.e., it produces the same responses regardless of the order or number of
@@ -110,7 +110,7 @@ url
 ```
 
 Moreover, you can also replace the URL path if it's necessary.
-To do that, you just need to include it to the URL when you run the command:
+To do that, you just need to include it in the URL when you run the command:
 
 ```shell
 testpoint send ./requests.csv http://localhost:8083/new-endpoint
@@ -121,7 +121,7 @@ the request will be sent to `http://localhost:8083/new-endpoint?prefix=at`.
 
 ### Workers
 
-By default, the `send` command uses only one thread to send requests. However, if you have a lot of input data, the
+By default, the `send` command uses only one thread to send requests; however, if you have a lot of input data, the
 execution might take a while. To speed it up, you might want to increase the number of workers (you can think of them as
 threads) using the `--workers` or just `-w` flag:
 
@@ -131,7 +131,7 @@ testpoint -w 8 send ./requests.csv http://localhost:8083
 
 ### Custom request transformation
 
-The default request transformation is usually sufficient for most cases. However, if your request data is arranged
+The default request transformation is usually sufficient for most cases; however, if your request data is arranged
 differently in the CSV file or if you need to make specific changes to your requests before sending them, you can always
 write your own custom transformation using JavaScript.
 
@@ -178,7 +178,7 @@ because it's a feature of **the default transformation**.
 ## Comparing responses
 
 After collecting the responses, you might want to compare them to see if there are any differences. To do that, run
-the `compare` command with the two csv files as arguments:
+the `compare` command with the two CSV files as arguments:
 
 ```shell
 testpoint compare ./http-localhost-8083.csv ./http-localhost-8084.csv
@@ -190,13 +190,81 @@ If there are any differences in responses, the mismatches will be printed in you
 As you can see in the screenshot, there are a few differences between the two responses: the JSON object with `id` 42
 has appeared, and the object with `id` 45 is no longer there.
 
+### Ignore order
+
+If you have arrays in your JSON response and want to compare them while ignoring the order, you can set the
+flag `--ignore-order`:
+
+```shell
+testpoint compare --ignore-order ./http-localhost-8083.csv ./http-localhost-8084.csv
+```
+
+Note that this flag only works when you use **the default comparator**.
+
+### Custom comparator
+
+If you want to customise how your responses are compared, you can do so by writing your own custom comparator. A
+comparator is JavaScript file with a `compare` function that takes two responses as arguments and returns a map
+of comparison definitions. Let's take a look at the following example:
+
+```javascript
+function compare(resp1, resp2) {
+    return {
+        "status": {x: resp1.status, y: resp2.status},
+        "body": {
+            x: resp1.body,
+            y: resp2.body,
+            exclude: [
+                "words[*].pronunciationTracks[*].id",
+                "words[*].pronunciationTracks[*].variety",
+            ],
+            ignoreOrder: true,
+        }
+    };
+}
+```
+
+A comparison definition is a simple structure that helps the `compare` command understand how exactly you want it to
+compare different parts of the response. In the example above, we created two comparison definitions: `status`
+and `body` to compare status codes and response bodies, respectively. You can give any names to your comparison
+definitions as they are only used for printing mismatches in the log.
+
+Let's break down the structure of a comparison definition:
+
+* The fields `x` and `y` are used to pass the data we want to compare. For example, it can be a JSON string or a
+  JavaScript object.
+* `exclude` allows you to exclude some fields that you don't want to compare. You can give a full path to a specific
+  field or use a wildcard `*`.
+* `ignoreOrder` makes the comparator ignore the order in all arrays. It works the same way as the `--ignore-order` flag,
+  but its scope is narrowed down to the data you specified to compare.
+
+You can also break the response body into multiple comparison definition for convenience. For example:
+
+```javascript
+function compare(resp1, resp2) {
+    const body1 = JSON.parse(resp1.body)
+    const body2 = JSON.parse(resp2.body)
+    return {
+        "body.id": {
+            x: body1.id,
+            y: body2.id,
+        },
+        "body.words": {
+            x: body1.words,
+            y: body2.words,
+            ignoreOrder: true,
+        }
+    };
+}
+```
+
+Take into account that you need to parse the response body to work with its specific attributes.
+
+### CSV report
+
 If you want to collect all the mismatched responses into a file, you can add the `--csv-report` flag when you run the
 command, specifying the name of the output CSV file:
 
 ```shell
 testpoint compare --csv-report ./report.csv ./http-localhost-8083.csv ./http-localhost-8084.csv
 ```
-
-### Custom comparator
-
-TBD
