@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -97,7 +98,8 @@ func sendRequest(client *http.Client, req Request) (Response, error) {
 		return Response{}, errors.New("cannot read an http body: " + err.Error())
 	}
 
-	return Response{strings.TrimSpace(resp.Status), string(body)}, nil
+	status := strconv.FormatInt(int64(resp.StatusCode), 10)
+	return Response{status, string(body)}, nil
 }
 
 func doRequest(client *http.Client, req *http.Request, retries int) (*http.Response, error) {
