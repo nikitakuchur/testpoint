@@ -15,7 +15,7 @@ function compare(resp1, resp2) {
 		"status": {x:resp1.status, y:resp2.status}
 	};
 }
-`)
+`, false)
 
 	rec1 := sender.Response{
 		Status: "200",
@@ -47,7 +47,7 @@ function compare(resp1, resp2) {
 		"body": {x: resp1.body, y: resp2.body}
 	};
 }
-`)
+`, false)
 
 	rec1 := sender.Response{
 		Status: "200",
@@ -84,7 +84,7 @@ function compare(resp1, resp2) {
 		"body.testValue2": {x: body1.testValue2, y: body2.testValue2}
 	};
 }
-`)
+`, false)
 
 	rec1 := sender.Response{
 		Status: "200",
@@ -127,7 +127,7 @@ function compare(resp1, resp2) {
 		"status": {x: "123", y: "123"}
 	};
 }
-`)
+`, false)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -143,7 +143,7 @@ function compare(resp1, resp2) {
 		"status": {x: "123", y: 123}
 	};
 }
-`)
+`, false)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -166,7 +166,7 @@ function compare(resp1, resp2) {
 		"test": {x: "123", y: null}
 	};
 }
-`)
+`, false)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -189,7 +189,7 @@ function compare(resp1, resp2) {
 		"test": {x: "123", y: undefined}
 	};
 }
-`)
+`, false)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -218,7 +218,7 @@ function compare(resp1, resp2) {
 		"objects": {x: foo, y: bar}
 	};
 }
-`)
+`, false)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -245,7 +245,7 @@ function compare(resp1, resp2) {
 		"arrays": {x: foo, y: bar}
 	};
 }
-`)
+`, false)
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
@@ -296,7 +296,7 @@ function compare(resp1, resp2) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			comp, _ := comparator.NewScriptComparator(d.script)
+			comp, _ := comparator.NewScriptComparator(d.script, false)
 			actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
 			if len(actual) != 0 {
@@ -309,7 +309,7 @@ function compare(resp1, resp2) {
 func TestNewScriptComparatorWithCreationError(t *testing.T) {
 	scripts := []string{"-=24wsfs", ""}
 	for _, script := range scripts {
-		_, err := comparator.NewScriptComparator(script)
+		_, err := comparator.NewScriptComparator(script, false)
 		if err == nil {
 			t.Errorf("incorrect result: expected an error")
 		}
@@ -322,7 +322,7 @@ function compare(resp1, resp2) {
 	const a = null;
 	a.test();
 }
-`)
+`, false)
 
 	_, err := comp.Compare(sender.Response{}, sender.Response{})
 

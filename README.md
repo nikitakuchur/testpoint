@@ -199,8 +199,6 @@ flag `--ignore-order`:
 testpoint compare --ignore-order ./http-localhost-8083.csv ./http-localhost-8084.csv
 ```
 
-Note that this flag only works when you use **the default comparator**.
-
 ### Custom comparator
 
 If you want to customise how your responses are compared, you can do so by writing your own custom comparator. A
@@ -236,7 +234,15 @@ Let's break down the structure of a comparison definition:
 * `exclude` allows you to exclude some fields that you don't want to compare. You can give a full path to a specific
   field or use a wildcard `*`.
 * `ignoreOrder` makes the comparator ignore the order in all arrays. It works the same way as the `--ignore-order` flag,
-  but its scope is narrowed down to the data you specified to compare.
+  but its scope is narrowed down to the data you specified to compare. By default, this property will be equal to the
+  value of the `--ignore-order` flag, which is `false` if not specified otherwise.
+
+To run the `compare` command with your custom comparator, use the `--comparator` or simply `-c` flag to specify the
+script:
+
+```shell
+testpoint compare -c ./comparator.js ./http-localhost-8083.csv ./http-localhost-8084.csv
+```
 
 You can also break the response body into multiple comparison definition for convenience. For example:
 
