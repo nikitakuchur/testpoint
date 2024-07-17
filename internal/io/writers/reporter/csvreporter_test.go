@@ -35,8 +35,8 @@ func TestCsvReporter_Report(t *testing.T) {
 
 	actual := testutils.ReadFile(tempDir + "/report.csv")
 
-	expected := `req_url_1,req_url_2,req_method,req_headers,req_body,req_hash,resp_status_1,resp_body_1,resp_status_2,resp_body_2
-http://test1.com,http://test2.com,GET,headers,body,123,200,hello,404,not found
+	expected := `req1_url,req1_method,req1_headers,req1_body,req2_url,req2_method,req2_headers,req2_body,req_hash,resp1_status,resp1_body,resp2_status,resp2_body
+http://test1.com,GET,headers,body,http://test2.com,GET,headers,body,123,200,hello,404,not found
 `
 
 	if actual != expected {
