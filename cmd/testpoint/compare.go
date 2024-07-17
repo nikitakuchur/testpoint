@@ -55,7 +55,7 @@ func newCompareCmd() *cobra.Command {
 			diffs := comparator.CompareResponses(
 				records1,
 				records2,
-				createRespComparator(conf.comparator, conf.ignoreOrder),
+				createComparator(conf.comparator, conf.ignoreOrder),
 				conf.numComparisons,
 			)
 
@@ -72,15 +72,15 @@ func newCompareCmd() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.IntVarP(&conf.numComparisons, "num-comparisons", "n", 0, "a number of comparisons to perform")
-	flags.StringVarP(&conf.comparator, "comparator", "c", "", "a JavaScript file with a response comparator")
+	flags.IntVarP(&conf.numComparisons, "num-comparisons", "n", 0, "number of comparisons to perform")
+	flags.StringVarP(&conf.comparator, "comparator", "c", "", "JavaScript file with a response comparator")
 	flags.BoolVar(&conf.ignoreOrder, "ignore-order", false, "enable this flag if you want to ignore array order during comparison")
 	flags.StringVar(&conf.csvReport, "csv-report", "", "output a comparison report to a CSV file")
 
 	return cmd
 }
 
-func createRespComparator(filepath string, ignoreOrder bool) comparator.Comparator {
+func createComparator(filepath string, ignoreOrder bool) comparator.Comparator {
 	if filepath == "" {
 		return comparator.NewDefaultComparator(ignoreOrder)
 	}

@@ -129,6 +129,15 @@ threads) using the `--workers` or just `-w` flag:
 testpoint -w 8 send ./requests.csv http://localhost:8083
 ```
 
+### Limiting the number of requests
+
+If you have a large input file and you don't want to process all the requests, you can use the flag `--num-requests` or
+just `-n` to specify the number of requests to process:
+
+```shell
+testpoint -n 100 send ./requests.csv http://localhost:8083 http://localhost:8084
+```
+
 ### Custom request transformation
 
 The default request transformation is usually sufficient for most cases; however, if your request data is arranged
@@ -197,6 +206,15 @@ flag `--ignore-order`:
 
 ```shell
 testpoint compare --ignore-order ./http-localhost-8083.csv ./http-localhost-8084.csv
+```
+
+### Limiting the number of comparisons
+
+If you have large input files and you don't want to compare all the responses from them, you can use the
+flag `--num-comparisons` or just `-n` to specify the number of comparisons to perform:
+
+```shell
+testpoint compare -n 100 ./http-localhost-8083.csv ./http-localhost-8084.csv
 ```
 
 ### Custom comparator
