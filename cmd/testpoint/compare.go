@@ -5,17 +5,19 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"strconv"
 	"testpoint/internal/comparator"
 	"testpoint/internal/io/readers/respreader"
 	"testpoint/internal/io/writers/reporter"
 )
 
 type compareConfig struct {
-	file1       string
-	file2       string
-	comparator  string
-	ignoreOrder bool
-	csvReport   string
+	file1          string
+	file2          string
+	numComparisons int
+	comparator     string
+	ignoreOrder    bool
+	csvReport      string
 }
 
 func (c compareConfig) String() string {
@@ -23,9 +25,13 @@ func (c compareConfig) String() string {
 	if comp == "" {
 		comp = "default"
 	}
+	numComparisons := "all"
+	if c.numComparisons > 0 {
+		numComparisons = strconv.Itoa(c.numComparisons)
+	}
 	return fmt.Sprintf(
-		"file1: '%v', file2: %v, comparator: %v, ignoreOrder: %v, csvReport: '%v'",
-		c.file1, c.file2, comp, c.ignoreOrder, c.csvReport,
+		"file1: %v, file2: %v, numComparisons: %v, comparator: %v, ignoreOrder: %v, csvReport: %v",
+		c.file1, c.file2, numComparisons, comp, c.ignoreOrder, c.csvReport,
 	)
 }
 
@@ -46,7 +52,12 @@ func newCompareCmd() *cobra.Command {
 
 			records1 := respreader.ReadResponses(conf.file1)
 			records2 := respreader.ReadResponses(conf.file2)
-			diffs := comparator.CompareResponses(records1, records2, createRespComparator(conf.comparator, conf.ignoreOrder))
+			diffs := comparator.CompareResponses(
+				records1,
+				records2,
+				createRespComparator(conf.comparator, conf.ignoreOrder),
+				conf.numComparisons,
+			)
 
 			reporters := []reporter.Reporter{reporter.NewLogReporter(log.Default())}
 
@@ -61,6 +72,7 @@ func newCompareCmd() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
+	flags.IntVarP(&conf.numComparisons, "num-comparisons", "n", 0, "a number of comparisons to perform")
 	flags.StringVarP(&conf.comparator, "comparator", "c", "", "a JavaScript file with a response comparator")
 	flags.BoolVar(&conf.ignoreOrder, "ignore-order", false, "enable this flag if you want to ignore array order during comparison (works only with the default comparator)")
 	flags.StringVar(&conf.csvReport, "csv-report", "", "output a comparison report to a CSV file")

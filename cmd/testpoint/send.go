@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"strconv"
 	"testpoint/internal/filter"
 	"testpoint/internal/io/readers/reqreader"
 	"testpoint/internal/io/writers/respwriter"
@@ -14,6 +15,7 @@ import (
 
 type sendConfig struct {
 	input          string
+	numRequests    int
 	noHeader       bool
 	urls           []string
 	transformation string
@@ -26,9 +28,13 @@ func (c sendConfig) String() string {
 	if transformation == "" {
 		transformation = "default"
 	}
+	numRequests := "all"
+	if c.numRequests > 0 {
+		numRequests = strconv.Itoa(c.numRequests)
+	}
 	return fmt.Sprintf(
-		"input: '%v', noHeader: %v, urls: %v, transform: %v, workers: %v, output: '%v'",
-		c.input, c.noHeader, c.urls, transformation, c.workers, c.outputDir,
+		"input: %v, numRequests: %v, noHeader: %v, urls: %v, transformation: %v, workers: %v, outputDir: %v",
+		c.input, numRequests, c.noHeader, c.urls, transformation, c.workers, c.outputDir,
 	)
 }
 
@@ -47,7 +53,7 @@ func newSendCmd() *cobra.Command {
 			log.Printf("configuration: {%v}\n", conf)
 			log.Println("starting to process the requests...")
 
-			records := reqreader.ReadRequests(conf.input, !conf.noHeader)
+			records := reqreader.ReadRequests(conf.input, !conf.noHeader, conf.numRequests)
 			records = filter.Filter(records)
 			requests := transformer.TransformRequests(conf.urls, records, createReqTransformation(conf.transformation))
 			responses := sender.SendRequests(requests, conf.workers)
@@ -59,6 +65,7 @@ func newSendCmd() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
+	flags.IntVarP(&conf.numRequests, "num-requests", "n", 0, "a number of requests to process")
 	flags.BoolVar(&conf.noHeader, "no-header", false, "enable this flag if your CSV file has no header")
 	flags.StringVarP(&conf.transformation, "transformation", "t", "", "a JavaScript file with a request transformation")
 	flags.IntVarP(&conf.workers, "workers", "w", 1, "a number of workers to send requests")

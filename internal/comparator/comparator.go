@@ -20,14 +20,23 @@ type Comparator interface {
 }
 
 // CompareResponses compares responses from the given channels using the specified response comparator.
-func CompareResponses(records1, records2 <-chan respreader.RespRecord, comparator Comparator) <-chan RespDiff {
+// You can limit the number of comparisons by using the n param.
+func CompareResponses(records1, records2 <-chan respreader.RespRecord, comparator Comparator, numComparisons int) <-chan RespDiff {
 	output := make(chan RespDiff)
 
 	go func() {
+		defer close(output)
+
 		cache := make(map[uint64]respreader.RespRecord)
 
+		count := 0
 		isRecords1Closed, isRecords2Closed := false, false
 		for {
+			if numComparisons > 0 && count >= numComparisons {
+				// we reached the specified number of comparisons
+				return
+			}
+
 			if isRecords1Closed && isRecords2Closed {
 				break
 			}
@@ -48,6 +57,7 @@ func CompareResponses(records1, records2 <-chan respreader.RespRecord, comparato
 
 				// we have both records, let's compare them
 				compareRecords(rec1, rec2, comparator, output)
+				count++
 			case rec2, ok := <-records2:
 				if !ok {
 					isRecords2Closed = true
@@ -61,14 +71,13 @@ func CompareResponses(records1, records2 <-chan respreader.RespRecord, comparato
 				delete(cache, rec2.ReqHash)
 
 				compareRecords(rec1, rec2, comparator, output)
+				count++
 			}
 		}
 
 		for _, rec := range cache {
 			log.Printf("request with hash=%v is missing the second response", rec.ReqHash)
 		}
-
-		close(output)
 	}()
 
 	return output

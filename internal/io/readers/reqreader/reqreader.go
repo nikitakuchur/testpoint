@@ -33,7 +33,7 @@ func (rec ReqRecord) String() string {
 }
 
 // ReadRequests reads the CSV files with requests and sends the data to the output channel.
-func ReadRequests(path string, withHeader bool) <-chan ReqRecord {
+func ReadRequests(path string, withHeader bool, numRequests int) <-chan ReqRecord {
 	output := make(chan ReqRecord)
 
 	go func() {
@@ -46,7 +46,7 @@ func ReadRequests(path string, withHeader bool) <-chan ReqRecord {
 		}
 
 		for _, filename := range filenames {
-			err := readFile(filename, withHeader, output)
+			err := readFile(filename, withHeader, numRequests, output)
 			if err != nil {
 				log.Printf("%v: %v, the file was skipped", filename, err)
 			}
@@ -56,7 +56,7 @@ func ReadRequests(path string, withHeader bool) <-chan ReqRecord {
 	return output
 }
 
-func readFile(filename string, withHeader bool, output chan<- ReqRecord) error {
+func readFile(filename string, withHeader bool, numRequests int, output chan<- ReqRecord) error {
 	file, err := os.Open(filename)
 	defer file.Close()
 
@@ -64,7 +64,7 @@ func readFile(filename string, withHeader bool, output chan<- ReqRecord) error {
 		return err
 	}
 
-	err = readRecords(file, withHeader, output)
+	err = readRecords(file, withHeader, numRequests, output)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func readFile(filename string, withHeader bool, output chan<- ReqRecord) error {
 	return nil
 }
 
-func readRecords(file *os.File, withHeader bool, output chan<- ReqRecord) error {
+func readRecords(file *os.File, withHeader bool, numRequests int, output chan<- ReqRecord) error {
 	reader := csv.NewReader(file)
 
 	var header []string = nil
@@ -84,7 +84,11 @@ func readRecords(file *os.File, withHeader bool, output chan<- ReqRecord) error 
 		header = h
 	}
 
-	for {
+	for count := 0; ; count++ {
+		if numRequests > 0 && count >= numRequests {
+			return nil
+		}
+
 		values, err := reader.Read()
 		if err == io.EOF {
 			return nil

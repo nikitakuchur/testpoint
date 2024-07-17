@@ -71,7 +71,7 @@ func TestSendRequests(t *testing.T) {
 	expected := []sender.RequestResponse{
 		{
 			sender.Request{Url: server.URL, Method: "GET", Headers: `{"myHeader":"foo"}`},
-			sender.Response{Status: "200 OK", Body: "Hello world!"},
+			sender.Response{Status: "200", Body: "Hello world!"},
 		},
 	}
 

@@ -34,7 +34,7 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 			case <-done:
 				return
 			case _ = <-ticker.C:
-				log.Printf("processed %v requests...", processed.Load())
+				log.Printf("collected %v responses...", processed.Load())
 			}
 		}
 	}()
@@ -67,7 +67,7 @@ func WriteResponses(input <-chan sender.RequestResponse, dir string) {
 	}
 	ticker.Stop()
 	done <- true
-	log.Println("total number of processed requests:", processed.Load())
+	log.Println("total number of collected responses:", processed.Load())
 }
 
 func urlToFilename(url string) string {

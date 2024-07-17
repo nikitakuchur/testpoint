@@ -17,7 +17,7 @@ url,method,headers,body
 /api/test?prefix=sp,HEAD,"{""myHeader"":""test4""}","{""field"":""test4""}"
 `)
 
-	records := reqreader.ReadRequests(filename, true)
+	records := reqreader.ReadRequests(filename, true, 0)
 
 	actual := testutils.ChanToSlice(records)
 	if len(actual) != 4 {
@@ -61,7 +61,7 @@ func TestReadRequestsWithoutHeader(t *testing.T) {
 /api/test?prefix=sp,HEAD,"{""myHeader"":""test4""}","{""field"":""test4""}"
 `)
 
-	records := reqreader.ReadRequests(filename, false)
+	records := reqreader.ReadRequests(filename, false, 0)
 
 	actual := testutils.ChanToSlice(records)
 	if len(actual) != 4 {
@@ -93,7 +93,7 @@ func TestReadRequestsWithoutHeader(t *testing.T) {
 }
 
 func TestReadRequestsWithEmptyPath(t *testing.T) {
-	records := reqreader.ReadRequests("", true)
+	records := reqreader.ReadRequests("", true, 0)
 	actual := testutils.ChanToSlice(records)
 	if len(actual) != 0 {
 		t.Error("incorrect result: expected number of records is 0, got", len(actual))
@@ -104,7 +104,7 @@ func TestReadRequestsWithEmptyFile(t *testing.T) {
 	tempDir := t.TempDir()
 	filename := testutils.CreateTempFile(tempDir, "requests.csv", ``)
 
-	records := reqreader.ReadRequests(filename, true)
+	records := reqreader.ReadRequests(filename, true, 0)
 
 	actual := testutils.ChanToSlice(records)
 	if len(actual) != 0 {
@@ -122,7 +122,7 @@ url,method,headers,body
 /api/test?prefix=sp,HEAD,"{""myHeader"":""test4""}","{""field"":""test4""}""
 `)
 
-	records := reqreader.ReadRequests(filename, true)
+	records := reqreader.ReadRequests(filename, true, 0)
 
 	actual := testutils.ChanToSlice(records)
 	if len(actual) != 2 {
@@ -164,7 +164,7 @@ url,method,headers,body
 /api/test2?prefix=st,HEAD,"{""myHeader"":""test8""}","{""field"":""test8""}"
 `)
 
-	records := reqreader.ReadRequests(tempDir, true)
+	records := reqreader.ReadRequests(tempDir, true, 0)
 
 	actual := testutils.ChanToSlice(records)
 	if len(actual) != 8 {
@@ -223,7 +223,7 @@ url,method,headers,body
 func TestReadRequestsFromEmptyDir(t *testing.T) {
 	tempDir := t.TempDir()
 
-	records := reqreader.ReadRequests(tempDir, true)
+	records := reqreader.ReadRequests(tempDir, true, 0)
 
 	actual := testutils.ChanToSlice(records)
 	if len(actual) != 0 {
@@ -232,7 +232,7 @@ func TestReadRequestsFromEmptyDir(t *testing.T) {
 }
 
 func TestReadRequestsFromNonexistentDir(t *testing.T) {
-	records := reqreader.ReadRequests("/this/directory/does/not/exist/", true)
+	records := reqreader.ReadRequests("/this/directory/does/not/exist/", true, 0)
 
 	actual := testutils.ChanToSlice(records)
 	if len(actual) != 0 {
