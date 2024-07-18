@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platforms: [
+          {os: "darwin", arch: "arm64"},
+          {os: "linux", arch: "amd64"},
+          {os: "windows", arch: "amd64"}
+        ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+      - name: Build
+        run: GOOS=${{ matrix.platforms.os }} GOARCH=${{ matrix.platforms.arch }} VERSION=${{ github.ref_name }} make build
+
+      - name: Set full release name
+        run: echo "RELEASE_NAME=${{ github.event.repository.name }}_${{ github.ref_name }}_${{ matrix.platforms.os }}_${{ matrix.platforms.arch }}" >> $GITHUB_ENV
+
+      - name: Prepare the bin directory
+        run: mv ./bin ./${{ env.RELEASE_NAME }}
+
+      - name: Compress the binary
+        run: tar -czvf ${{ env.RELEASE_NAME }}.tar.gz ./${{ env.RELEASE_NAME }}
+
+      - name: Upload the asset
+        run: gh release upload ${{ github.ref_name }} ./${{ env.RELEASE_NAME }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}

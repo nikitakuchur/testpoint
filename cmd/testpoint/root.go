@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "undefined"
+var version = ""
 
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
