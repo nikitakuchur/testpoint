@@ -1,6 +1,6 @@
 # Testpoint
 
-**Testpoint** is a simple CLI testing tool written in Go that can help ensure that your endpoints work as expected after
+**Testpoint** is a CLI testing tool written in Go that can help ensure that your endpoints work as expected after
 major refactoring or migration to a new version of your favourite framework.
 
 The tool has two main features:
