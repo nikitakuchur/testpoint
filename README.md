@@ -89,6 +89,9 @@ The order of the columns doesn't matter; the values will be found by column name
 
 Note that the command uses the `GET` method by default if it's not specified otherwise in the file.
 
+If you don't have a header in your CSV file, then you can use the `--no-header` flag. However, make sure that your data
+is arranged in the following order: URL, HTTP method, headers, body.
+
 ### URL substitution
 
 As you might have noticed, the requests from the CSV file already include the host, which is `https://test.com`.
