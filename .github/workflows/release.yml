@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 permissions:
   contents: write
@@ -14,6 +14,7 @@ jobs:
       matrix:
         platforms: [
           {os: "darwin", arch: "arm64"},
+          {os: "darwin", arch: "amd64"},
           {os: "linux", arch: "amd64"},
           {os: "windows", arch: "amd64"}
         ]
@@ -32,7 +33,7 @@ jobs:
       - name: Set full release name
         run: echo "RELEASE_NAME=${{ github.event.repository.name }}_${{ github.ref_name }}_${{ matrix.platforms.os }}_${{ matrix.platforms.arch }}" >> $GITHUB_ENV
 
-      - name: Prepare the bin directory
+      - name: Rename the bin directory
         run: mv ./bin ./${{ env.RELEASE_NAME }}
 
       - name: Compress the binary
