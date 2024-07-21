@@ -1,12 +1,12 @@
 package reporter_test
 
 import (
+	"github.com/nikitakuchur/testpoint/internal/comparator"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
+	"github.com/nikitakuchur/testpoint/internal/io/writers/reporter"
+	testutils "github.com/nikitakuchur/testpoint/internal/utils/testing"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"testing"
-	"testpoint/internal/comparator"
-	"testpoint/internal/io/readers/respreader"
-	"testpoint/internal/io/writers/reporter"
-	testutils "testpoint/internal/utils/testing"
 )
 
 func TestCsvReporter_Report(t *testing.T) {

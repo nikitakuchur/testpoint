@@ -2,13 +2,13 @@ package respwriter
 
 import (
 	"encoding/csv"
+	"github.com/nikitakuchur/testpoint/internal/sender"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync/atomic"
-	"testpoint/internal/sender"
 	"time"
 )
 

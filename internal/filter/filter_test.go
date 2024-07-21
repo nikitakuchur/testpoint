@@ -2,9 +2,9 @@ package filter_test
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/filter"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/reqreader"
 	"testing"
-	"testpoint/internal/filter"
-	"testpoint/internal/io/readers/reqreader"
 )
 
 func TestFilterWithNoData(t *testing.T) {

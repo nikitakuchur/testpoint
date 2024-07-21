@@ -2,10 +2,10 @@ package transformer_test
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/reqreader"
+	"github.com/nikitakuchur/testpoint/internal/sender"
+	"github.com/nikitakuchur/testpoint/internal/transformer"
 	"testing"
-	"testpoint/internal/io/readers/reqreader"
-	"testpoint/internal/sender"
-	"testpoint/internal/transformer"
 )
 
 func TestNewTransformationWithoutFields(t *testing.T) {

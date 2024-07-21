@@ -2,11 +2,11 @@ package reporter
 
 import (
 	"fmt"
+	"github.com/nikitakuchur/testpoint/internal/comparator"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"log"
 	"strings"
-	"testpoint/internal/comparator"
-	"testpoint/internal/io/readers/respreader"
 )
 
 // LogReporter represents a reporter that simply logs all mismatches.

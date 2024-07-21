@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dop251/goja"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/reqreader"
+	"github.com/nikitakuchur/testpoint/internal/sender"
 	"net/url"
 	"reflect"
 	"strings"
-	"testpoint/internal/io/readers/reqreader"
-	"testpoint/internal/sender"
 )
 
 // ReqTransformation is a function that transforms an input record to an HTTP request.

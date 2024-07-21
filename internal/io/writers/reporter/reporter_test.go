@@ -2,11 +2,11 @@ package reporter_test
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/comparator"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
+	"github.com/nikitakuchur/testpoint/internal/io/writers/reporter"
 	"sync"
 	"testing"
-	"testpoint/internal/comparator"
-	"testpoint/internal/io/readers/respreader"
-	"testpoint/internal/io/writers/reporter"
 )
 
 type testReporter struct {

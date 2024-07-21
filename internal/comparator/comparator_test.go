@@ -3,12 +3,12 @@ package comparator_test
 import (
 	"errors"
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/comparator"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
+	"github.com/nikitakuchur/testpoint/internal/sender"
+	testutils "github.com/nikitakuchur/testpoint/internal/utils/testing"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"testing"
-	"testpoint/internal/comparator"
-	"testpoint/internal/io/readers/respreader"
-	"testpoint/internal/sender"
-	testutils "testpoint/internal/utils/testing"
 )
 
 func TestCompareResponses(t *testing.T) {

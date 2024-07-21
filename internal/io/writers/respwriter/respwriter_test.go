@@ -1,13 +1,13 @@
 package respwriter_test
 
 import (
+	"github.com/nikitakuchur/testpoint/internal/io/writers/respwriter"
+	"github.com/nikitakuchur/testpoint/internal/sender"
+	testutils "github.com/nikitakuchur/testpoint/internal/utils/testing"
 	"log"
 	"os"
 	"path/filepath"
 	"testing"
-	"testpoint/internal/io/writers/respwriter"
-	"testpoint/internal/sender"
-	testutils "testpoint/internal/utils/testing"
 )
 
 func TestWriteResponsesWithNoResponses(t *testing.T) {

@@ -2,9 +2,9 @@ package respreader_test
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
+	testutils "github.com/nikitakuchur/testpoint/internal/utils/testing"
 	"testing"
-	"testpoint/internal/io/readers/respreader"
-	testutils "testpoint/internal/utils/testing"
 )
 
 func TestReadResponses(t *testing.T) {

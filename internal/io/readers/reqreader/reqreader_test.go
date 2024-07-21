@@ -2,9 +2,9 @@ package reqreader_test
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/reqreader"
+	testutils "github.com/nikitakuchur/testpoint/internal/utils/testing"
 	"testing"
-	"testpoint/internal/io/readers/reqreader"
-	testutils "testpoint/internal/utils/testing"
 )
 
 func TestReadRequestsWithHeader(t *testing.T) {

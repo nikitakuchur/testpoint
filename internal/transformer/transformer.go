@@ -1,9 +1,9 @@
 package transformer
 
 import (
+	"github.com/nikitakuchur/testpoint/internal/io/readers/reqreader"
+	"github.com/nikitakuchur/testpoint/internal/sender"
 	"log"
-	"testpoint/internal/io/readers/reqreader"
-	"testpoint/internal/sender"
 )
 
 // TransformRequests reads raw request data from the input channel,

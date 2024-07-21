@@ -1,8 +1,8 @@
 package reporter
 
 import (
+	"github.com/nikitakuchur/testpoint/internal/comparator"
 	"sync"
-	"testpoint/internal/comparator"
 )
 
 // Reporter is an interface that can report mismatches in different ways depending on the implementation.

@@ -1,4 +1,4 @@
-module testpoint
+module github.com/nikitakuchur/testpoint
 
 go 1.22
 

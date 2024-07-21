@@ -2,11 +2,11 @@ package sender_test
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/sender"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"testpoint/internal/sender"
 )
 
 func TestSendRequestsWithNoRequests(t *testing.T) {

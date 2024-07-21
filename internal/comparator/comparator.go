@@ -1,10 +1,10 @@
 package comparator
 
 import (
+	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
+	"github.com/nikitakuchur/testpoint/internal/sender"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"log"
-	"testpoint/internal/io/readers/respreader"
-	"testpoint/internal/sender"
 )
 
 // RespDiff is the result of comparing two response records.

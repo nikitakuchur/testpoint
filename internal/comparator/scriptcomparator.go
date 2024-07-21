@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dop251/goja"
+	"github.com/nikitakuchur/testpoint/internal/diff"
+	"github.com/nikitakuchur/testpoint/internal/sender"
+	jsonutils "github.com/nikitakuchur/testpoint/internal/utils/json"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"reflect"
-	"testpoint/internal/diff"
-	"testpoint/internal/sender"
-	jsonutils "testpoint/internal/utils/json"
 )
 
 type ScriptComparator struct {

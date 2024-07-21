@@ -2,10 +2,10 @@ package comparator_test
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/comparator"
+	"github.com/nikitakuchur/testpoint/internal/sender"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"testing"
-	"testpoint/internal/comparator"
-	"testpoint/internal/sender"
 )
 
 func TestNewScriptComparatorWithStatus(t *testing.T) {

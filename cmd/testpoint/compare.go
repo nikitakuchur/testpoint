@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/nikitakuchur/testpoint/internal/comparator"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
+	"github.com/nikitakuchur/testpoint/internal/io/writers/reporter"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"strconv"
-	"testpoint/internal/comparator"
-	"testpoint/internal/io/readers/respreader"
-	"testpoint/internal/io/writers/reporter"
 )
 
 type compareConfig struct {

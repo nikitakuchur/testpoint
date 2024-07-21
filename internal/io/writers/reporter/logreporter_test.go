@@ -3,11 +3,11 @@ package reporter
 import (
 	"bytes"
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/comparator"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"log"
 	"testing"
-	"testpoint/internal/comparator"
-	"testpoint/internal/io/readers/respreader"
 )
 
 func TestLogReporter_Report(t *testing.T) {

@@ -3,11 +3,11 @@ package transformer_test
 import (
 	"errors"
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/reqreader"
+	"github.com/nikitakuchur/testpoint/internal/sender"
+	"github.com/nikitakuchur/testpoint/internal/transformer"
+	testutils "github.com/nikitakuchur/testpoint/internal/utils/testing"
 	"testing"
-	"testpoint/internal/io/readers/reqreader"
-	"testpoint/internal/sender"
-	"testpoint/internal/transformer"
-	testutils "testpoint/internal/utils/testing"
 )
 
 func TestTransformRequestsWithNoData(t *testing.T) {

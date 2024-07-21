@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
+	"github.com/nikitakuchur/testpoint/internal/filter"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/reqreader"
+	"github.com/nikitakuchur/testpoint/internal/io/writers/respwriter"
+	"github.com/nikitakuchur/testpoint/internal/sender"
+	"github.com/nikitakuchur/testpoint/internal/transformer"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"strconv"
-	"testpoint/internal/filter"
-	"testpoint/internal/io/readers/reqreader"
-	"testpoint/internal/io/writers/respwriter"
-	"testpoint/internal/sender"
-	"testpoint/internal/transformer"
 )
 
 type sendConfig struct {

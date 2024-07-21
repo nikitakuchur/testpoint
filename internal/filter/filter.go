@@ -1,7 +1,7 @@
 package filter
 
 import (
-	"testpoint/internal/io/readers/reqreader"
+	"github.com/nikitakuchur/testpoint/internal/io/readers/reqreader"
 )
 
 // Filter removes duplicates from the data stream.

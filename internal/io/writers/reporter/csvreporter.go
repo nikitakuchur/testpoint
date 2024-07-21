@@ -2,10 +2,10 @@ package reporter
 
 import (
 	"encoding/csv"
+	"github.com/nikitakuchur/testpoint/internal/comparator"
 	"log"
 	"os"
 	"strconv"
-	"testpoint/internal/comparator"
 )
 
 // CsvReporter represents a reporter that writes mismatched records to a CSV file.

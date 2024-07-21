@@ -2,8 +2,8 @@ package json_test
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"github.com/nikitakuchur/testpoint/internal/utils/json"
 	"testing"
-	"testpoint/internal/utils/json"
 )
 
 func TestReformatJson(t *testing.T) {
