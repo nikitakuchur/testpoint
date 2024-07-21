@@ -38,6 +38,31 @@ Note that not every REST endpoint is suitable for this kind of testing. If you w
 it's **idempotent** and **consistent**, i.e., it produces the same responses regardless of the order or number of
 requests.
 
+## Installation
+
+### Install with Go
+
+If you have Go installed on your system, you can simply execute the following command:
+
+```shell
+go install github.com/nikitakuchur/testpoint/cmd/testpoint@latest
+```
+
+Then, try to print the testpoint version to see if it works:
+
+```shell
+testpoint -v
+```
+
+If `go install` completes successfully but you get a `command not found` error, please ensure that your `PATH`
+variable is set correctly. For example, if you use macOS, you can add ``export PATH=`go env GOPATH`/bin/:$PATH`` to
+your `~/.zshrc`.
+
+### Manual Installation
+
+Alternatively, you can always download the latest binary directly
+from [the release page](https://github.com/nikitakuchur/testpoint/releases) and use it.
+
 ## Sending requests
 
 Let's assume you've already prepared a CSV file with requests and named it `requests.csv`. It might look something like
