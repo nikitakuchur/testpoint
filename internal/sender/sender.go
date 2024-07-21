@@ -73,7 +73,7 @@ func SendRequests(input <-chan Request, workers int) <-chan RequestResponse {
 func sendRequest(client *http.Client, req Request) (Response, error) {
 	httpReq, err := http.NewRequest(req.Method, req.Url, strings.NewReader(req.Body))
 	if err != nil {
-		return Response{}, errors.New("cannot create an http request: " + err.Error())
+		return Response{}, fmt.Errorf("cannot create an http request: %w", err)
 	}
 
 	if req.Headers != "" {
@@ -95,7 +95,7 @@ func sendRequest(client *http.Client, req Request) (Response, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return Response{}, errors.New("cannot read an http body: " + err.Error())
+		return Response{}, fmt.Errorf("cannot read an http body: %w", err)
 	}
 
 	status := strconv.FormatInt(int64(resp.StatusCode), 10)

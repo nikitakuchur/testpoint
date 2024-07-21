@@ -21,7 +21,7 @@ func NewReqTransformation(script string) (ReqTransformation, error) {
 
 	_, err := vm.RunString(script)
 	if err != nil {
-		return nil, errors.New("cannot run the transformation script: " + err.Error())
+		return nil, fmt.Errorf("cannot run the transformation script: %w", err)
 	}
 
 	transform, ok := goja.AssertFunction(vm.Get("transform"))
@@ -42,7 +42,7 @@ func NewReqTransformation(script string) (ReqTransformation, error) {
 		result, err := transform(goja.Undefined(), vm.ToValue(userUrl), jsRec)
 		if err != nil {
 			// We can't really do much with a runtime error, so let's just return an error to skip the record
-			return sender.Request{}, errors.New("JavaScript runtime error: " + err.Error())
+			return sender.Request{}, fmt.Errorf("JavaScript runtime error: %w", err)
 		}
 
 		if isEmptyValue(result) {
@@ -53,7 +53,7 @@ func NewReqTransformation(script string) (ReqTransformation, error) {
 
 		parsedHeaders, err := readJsHeaders(vm, obj, "headers")
 		if err != nil {
-			return sender.Request{}, errors.New("JavaScript runtime error: " + err.Error())
+			return sender.Request{}, fmt.Errorf("JavaScript runtime error: %w", err)
 		}
 
 		return sender.Request{
@@ -143,10 +143,10 @@ func mergeUrls(requestUrl string, userUrl string) (string, error) {
 	}
 
 	if parsedUserUrl.Scheme == "" {
-		return "", errors.New(fmt.Sprintf("parse \"%s\": missing protocol scheme", userUrl))
+		return "", fmt.Errorf("parse \"%s\": missing protocol scheme", userUrl)
 	}
 	if parsedUserUrl.Host == "" {
-		return "", errors.New(fmt.Sprintf("parse \"%s\": missing host", userUrl))
+		return "", fmt.Errorf("parse \"%s\": missing host", userUrl)
 	}
 
 	parsedRequestUrl.Scheme = parsedUserUrl.Scheme

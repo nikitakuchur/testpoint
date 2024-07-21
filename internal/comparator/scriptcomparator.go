@@ -2,6 +2,7 @@ package comparator
 
 import (
 	"errors"
+	"fmt"
 	"github.com/dop251/goja"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"reflect"
@@ -33,7 +34,7 @@ func NewScriptComparator(script string, ignoreOrder bool) (ScriptComparator, err
 
 	_, err := vm.RunString(script)
 	if err != nil {
-		return ScriptComparator{}, errors.New("failed to run the comparator script: " + err.Error())
+		return ScriptComparator{}, fmt.Errorf("failed to run the comparator script: %w", err)
 	}
 
 	compare, ok := goja.AssertFunction(vm.Get("compare"))
@@ -47,7 +48,7 @@ func NewScriptComparator(script string, ignoreOrder bool) (ScriptComparator, err
 func (c ScriptComparator) Compare(x, y sender.Response) (map[string][]diffmatchpatch.Diff, error) {
 	result, err := c.compare(goja.Undefined(), c.runtime.ToValue(x), c.runtime.ToValue(y))
 	if err != nil {
-		return nil, errors.New("JavaScript runtime error: " + err.Error())
+		return nil, fmt.Errorf("JavaScript runtime error: %w", err)
 	}
 
 	compDefs := c.extractComparisonDefinitions(result)
