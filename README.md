@@ -320,3 +320,8 @@ command, specifying the name of the output CSV file:
 ```shell
 testpoint compare --csv-report ./report.csv ./http-localhost-8083.csv ./http-localhost-8084.csv
 ```
+
+## Contributing
+
+I always welcome any help with the project! You can contribute by forking the repository and opening pull requests.
+Please ensure that your code passes the existing tests and write new tests to cover your changes if applicable.
