@@ -2,6 +2,7 @@ package json
 
 import (
 	"encoding/json"
+	"log"
 	"regexp"
 	"sort"
 	"strconv"
@@ -24,12 +25,13 @@ func ReformatJson(str string, sortArrays bool, exclude []string) string {
 func ToJson(v any, sortArrays bool, exclude []string) string {
 	newJson, ok := reformatJsonObject(v, "", sortArrays, exclude)
 	if !ok {
+		// everything has been excluded
 		return ""
 	}
 
 	bytes, err := json.MarshalIndent(newJson, "", "  ")
 	if err != nil {
-		panic(err)
+		log.Fatal("failed while marshalling an object", err)
 	}
 
 	return string(bytes)
@@ -73,11 +75,11 @@ func sortArray(array []any) {
 	sort.SliceStable(array, func(i, j int) bool {
 		b1, err := json.Marshal(array[i])
 		if err != nil {
-			panic(err)
+			log.Fatal("failed while marshalling an array", err)
 		}
 		b2, err := json.Marshal(array[j])
 		if err != nil {
-			panic(err)
+			log.Fatal("failed while marshalling an array", err)
 		}
 		return string(b1) < string(b2)
 	})
