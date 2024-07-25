@@ -248,7 +248,7 @@ testpoint compare -n 100 ./http-localhost-8083.csv ./http-localhost-8084.csv
 ### Custom comparator
 
 If you want to customise how your responses are compared, you can do so by writing your own custom comparator. A
-comparator is JavaScript file with a `compare` function that takes two responses as arguments and returns a map
+comparator is a JavaScript file with a `compare` function that takes two responses as arguments and returns a map
 of comparison definitions. Let's take a look at the following example:
 
 ```javascript
