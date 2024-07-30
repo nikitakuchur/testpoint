@@ -9,12 +9,14 @@ import (
 	jsonutils "github.com/nikitakuchur/testpoint/internal/utils/json"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"reflect"
+	"sync"
 )
 
 type ScriptComparator struct {
 	runtime     *goja.Runtime
 	compare     goja.Callable
 	ignoreOrder bool
+	mu          sync.Mutex
 }
 
 type comparisonDefinition struct {
@@ -25,9 +27,7 @@ type comparisonDefinition struct {
 }
 
 // NewScriptComparator creates a new response comparator from the given JavaScript code.
-// The script must have a function called 'compare' that accepts two responses and returns a map of diffs.
-// The map of diffs can contain anything the user is interested in comparing.
-// They can name keys as they want and use the 'diff' function to generate the diff.
+// The script must have a function called 'compare' that accepts two responses and returns a map of comparison definitions.
 func NewScriptComparator(script string, ignoreOrder bool) (ScriptComparator, error) {
 	vm := goja.New()
 	vm.SetFieldNameMapper(goja.UncapFieldNameMapper())
@@ -42,11 +42,15 @@ func NewScriptComparator(script string, ignoreOrder bool) (ScriptComparator, err
 		return ScriptComparator{}, errors.New("compare function not found")
 	}
 
-	return ScriptComparator{vm, compare, ignoreOrder}, nil
+	return ScriptComparator{vm, compare, ignoreOrder, sync.Mutex{}}, nil
 }
 
-func (c ScriptComparator) Compare(x, y sender.Response) (map[string][]diffmatchpatch.Diff, error) {
+func (c *ScriptComparator) Compare(x, y sender.Response) (map[string][]diffmatchpatch.Diff, error) {
+	c.mu.Lock()
+	// goja is not thread safe, so we have to lock this piece of code
 	result, err := c.compare(goja.Undefined(), c.runtime.ToValue(x), c.runtime.ToValue(y))
+	c.mu.Unlock()
+
 	if err != nil {
 		return nil, fmt.Errorf("JavaScript runtime error: %w", err)
 	}
@@ -63,7 +67,7 @@ func (c ScriptComparator) Compare(x, y sender.Response) (map[string][]diffmatchp
 	return diffs, nil
 }
 
-func (c ScriptComparator) extractComparisonDefinitions(v goja.Value) map[string]comparisonDefinition {
+func (c *ScriptComparator) extractComparisonDefinitions(v goja.Value) map[string]comparisonDefinition {
 	if v == nil || goja.IsNull(v) || goja.IsUndefined(v) {
 		return nil
 	}

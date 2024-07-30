@@ -5,6 +5,7 @@ import (
 	"github.com/nikitakuchur/testpoint/internal/sender"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"log"
+	"sync"
 )
 
 // RespDiff is the result of comparing two response records.
@@ -20,17 +21,42 @@ type Comparator interface {
 }
 
 // CompareResponses compares responses from the given channels using the specified response comparator.
-// You can limit the number of comparisons by using the n param.
-func CompareResponses(records1, records2 <-chan respreader.RespRecord, comparator Comparator, numComparisons int) <-chan RespDiff {
+func CompareResponses(records1, records2 <-chan respreader.RespRecord, numComparisons int, comparator Comparator, workers int) <-chan RespDiff {
+	responsesToCompare := matchResponses(records1, records2, numComparisons)
+
 	output := make(chan RespDiff)
 
-	go func() {
-		defer close(output)
+	wg := sync.WaitGroup{}
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 
-		cache := make(map[uint64]respreader.RespRecord)
+			for responses := range responsesToCompare {
+				compareRecords(responses[0], responses[1], comparator, output)
+			}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(output)
+	}()
+
+	return output
+}
+
+func matchResponses(records1, records2 <-chan respreader.RespRecord, numComparisons int) <-chan []respreader.RespRecord {
+	matchedResponses := make(chan []respreader.RespRecord)
+
+	go func() {
+		defer close(matchedResponses)
+
+		buffer := make(map[uint64]respreader.RespRecord)
 
 		count := 0
 		isRecords1Closed, isRecords2Closed := false, false
+
 		for {
 			if numComparisons > 0 && count >= numComparisons {
 				// we reached the specified number of comparisons
@@ -47,40 +73,40 @@ func CompareResponses(records1, records2 <-chan respreader.RespRecord, comparato
 					isRecords1Closed = true
 					continue
 				}
-				rec2, ok := cache[rec1.ReqHash]
+				rec2, ok := buffer[rec1.ReqHash]
 				if !ok {
 					// we don't have the second record yet, so we need to put this one aside
-					cache[rec1.ReqHash] = rec1
+					buffer[rec1.ReqHash] = rec1
 					break
 				}
-				delete(cache, rec1.ReqHash)
+				delete(buffer, rec1.ReqHash)
 
-				// we have both records, let's compare them
-				compareRecords(rec1, rec2, comparator, output)
+				// we have both records, let's send them to compare
+				matchedResponses <- []respreader.RespRecord{rec1, rec2}
 				count++
 			case rec2, ok := <-records2:
 				if !ok {
 					isRecords2Closed = true
 					continue
 				}
-				rec1, ok := cache[rec2.ReqHash]
+				rec1, ok := buffer[rec2.ReqHash]
 				if !ok {
-					cache[rec2.ReqHash] = rec2
+					buffer[rec2.ReqHash] = rec2
 					break
 				}
-				delete(cache, rec2.ReqHash)
+				delete(buffer, rec2.ReqHash)
 
-				compareRecords(rec1, rec2, comparator, output)
+				matchedResponses <- []respreader.RespRecord{rec1, rec2}
 				count++
 			}
 		}
 
-		for _, rec := range cache {
+		for _, rec := range buffer {
 			log.Printf("request with hash=%v is missing the second response", rec.ReqHash)
 		}
 	}()
 
-	return output
+	return matchedResponses
 }
 
 func compareRecords(x, y respreader.RespRecord, comparator Comparator, output chan<- RespDiff) {

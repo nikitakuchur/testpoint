@@ -26,7 +26,7 @@ func TestCompareResponses(t *testing.T) {
 		close(records2)
 	}()
 
-	diffs := comparator.CompareResponses(records1, records2, comparator.NewDefaultComparator(false), 0)
+	diffs := comparator.CompareResponses(records1, records2, 0, comparator.NewDefaultComparator(false), 1)
 
 	var actual = testutils.ChanToSlice(diffs)
 	if len(actual) != 2 {
@@ -74,7 +74,7 @@ func TestCompareResponsesWithMissingRecords(t *testing.T) {
 		close(records2)
 	}()
 
-	diffs := comparator.CompareResponses(records1, records2, comparator.NewDefaultComparator(false), 0)
+	diffs := comparator.CompareResponses(records1, records2, 0, comparator.NewDefaultComparator(false), 1)
 
 	var actual = testutils.ChanToSlice(diffs)
 	if len(actual) != 1 {
@@ -121,7 +121,7 @@ func TestCompareResponsesWithErrors(t *testing.T) {
 		close(records2)
 	}()
 
-	diffs := comparator.CompareResponses(records1, records2, ErrorRespComparator{}, 0)
+	diffs := comparator.CompareResponses(records1, records2, 0, ErrorRespComparator{}, 1)
 
 	var actual = testutils.ChanToSlice(diffs)
 	if len(actual) != 0 {

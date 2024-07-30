@@ -16,6 +16,7 @@ type compareConfig struct {
 	file2          string
 	numComparisons int
 	comparator     string
+	workers        int
 	ignoreOrder    bool
 	csvReport      string
 }
@@ -30,8 +31,8 @@ func (c compareConfig) String() string {
 		numComparisons = strconv.Itoa(c.numComparisons)
 	}
 	return fmt.Sprintf(
-		"file1: %v, file2: %v, numComparisons: %v, comparator: %v, ignoreOrder: %v, csvReport: %v",
-		c.file1, c.file2, numComparisons, comp, c.ignoreOrder, c.csvReport,
+		"file1: %v, file2: %v, numComparisons: %v, comparator: %v, workers: %v, ignoreOrder: %v, csvReport: %v",
+		c.file1, c.file2, numComparisons, comp, c.workers, c.ignoreOrder, c.csvReport,
 	)
 }
 
@@ -55,8 +56,9 @@ func newCompareCmd() *cobra.Command {
 			diffs := comparator.CompareResponses(
 				records1,
 				records2,
-				createComparator(conf.comparator, conf.ignoreOrder),
 				conf.numComparisons,
+				createComparator(conf.comparator, conf.ignoreOrder),
+				conf.workers,
 			)
 
 			reporters := []reporter.Reporter{reporter.NewLogReporter(log.Default())}
@@ -74,6 +76,7 @@ func newCompareCmd() *cobra.Command {
 	flags := cmd.Flags()
 	flags.IntVarP(&conf.numComparisons, "num-comparisons", "n", 0, "number of comparisons to perform")
 	flags.StringVarP(&conf.comparator, "comparator", "c", "", "JavaScript file with a response comparator")
+	flags.IntVarP(&conf.workers, "workers", "w", 8, "number of workers to compare responses")
 	flags.BoolVar(&conf.ignoreOrder, "ignore-order", false, "enable this flag if you want to ignore array order during comparison")
 	flags.StringVar(&conf.csvReport, "csv-report", "", "output a comparison report to a CSV file")
 
@@ -89,13 +92,13 @@ func createComparator(filepath string, ignoreOrder bool) comparator.Comparator {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return comp
+	return &comp
 }
 
 func readComparatorScript(filename string) string {
 	script, err := os.ReadFile(filename)
 	if err != nil {
-		log.Fatalln("cannot read the comparator script:", err)
+		log.Fatalln("cannot read the comparator script: ", err)
 	}
 	return string(script)
 }
