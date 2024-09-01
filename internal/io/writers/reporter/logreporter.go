@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/nikitakuchur/testpoint/internal/comparator"
 	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
-	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/nikitakuchur/testpoint/internal/strdiff"
 	"log"
 	"strings"
 )
@@ -38,11 +38,10 @@ func buildMismatch(d comparator.RespDiff) string {
 	}
 	sb.WriteString(fmt.Sprintf("\nhash: \t%d\n", d.Rec1.ReqHash))
 
-	dmp := diffmatchpatch.New()
 	for k, v := range d.Diffs {
 		sb.WriteString(fmt.Sprintf("\n%s:\n", k))
 
-		t := dmp.DiffPrettyText(shortenDiff(v))
+		t := strdiff.DiffToPrettyText(shortenDiff(v))
 		t = strings.ReplaceAll(t, "\n", "\n\t")
 
 		sb.WriteString("\t")
@@ -63,17 +62,17 @@ func writeRequest(sb *strings.Builder, rec respreader.RespRecord) {
 	}
 }
 
-func shortenDiff(diff []diffmatchpatch.Diff) []diffmatchpatch.Diff {
-	result := make([]diffmatchpatch.Diff, len(diff))
+func shortenDiff(diff []strdiff.Diff) []strdiff.Diff {
+	result := make([]strdiff.Diff, len(diff))
 	for i, d := range diff {
-		result[i].Type = d.Type
+		result[i].Operation = d.Operation
 		if strings.HasSuffix(d.Text, "\n") {
 			result[i].Text = d.Text
 		} else {
 			result[i].Text = d.Text + "\n"
 		}
 
-		if d.Type != diffmatchpatch.DiffEqual {
+		if d.Operation != strdiff.DiffEqual {
 			continue
 		}
 		substrings := strings.Split(d.Text, "\n")

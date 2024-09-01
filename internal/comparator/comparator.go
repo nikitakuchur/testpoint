@@ -3,7 +3,7 @@ package comparator
 import (
 	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
 	"github.com/nikitakuchur/testpoint/internal/sender"
-	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/nikitakuchur/testpoint/internal/strdiff"
 	"log"
 	"sync"
 )
@@ -12,12 +12,12 @@ import (
 type RespDiff struct {
 	Rec1  respreader.RespRecord
 	Rec2  respreader.RespRecord
-	Diffs map[string][]diffmatchpatch.Diff
+	Diffs map[string][]strdiff.Diff
 }
 
 // Comparator is responsible for performing comparison of two responses.
 type Comparator interface {
-	Compare(resp1, resp2 sender.Response) (map[string][]diffmatchpatch.Diff, error)
+	Compare(resp1, resp2 sender.Response) (map[string][]strdiff.Diff, error)
 }
 
 // CompareResponses compares responses from the given channels using the specified response comparator.
@@ -110,7 +110,7 @@ func matchResponses(records1, records2 <-chan respreader.RespRecord, numComparis
 }
 
 func compareRecords(x, y respreader.RespRecord, comparator Comparator, output chan<- RespDiff) {
-	diffs := make(map[string][]diffmatchpatch.Diff)
+	diffs := make(map[string][]strdiff.Diff)
 	defer func() {
 		if len(diffs) != 0 {
 			output <- RespDiff{x, y, diffs}

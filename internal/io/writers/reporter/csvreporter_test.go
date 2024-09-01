@@ -4,8 +4,8 @@ import (
 	"github.com/nikitakuchur/testpoint/internal/comparator"
 	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
 	"github.com/nikitakuchur/testpoint/internal/io/writers/reporter"
+	"github.com/nikitakuchur/testpoint/internal/strdiff"
 	testutils "github.com/nikitakuchur/testpoint/internal/utils/testing"
-	"github.com/sergi/go-diff/diffmatchpatch"
 	"testing"
 )
 
@@ -25,7 +25,7 @@ func TestCsvReporter_Report(t *testing.T) {
 				ReqUrl: "http://test2.com", ReqMethod: "GET", ReqHeaders: "headers", ReqBody: "body", ReqHash: 123,
 				RespStatus: "404", RespBody: "not found",
 			},
-			Diffs: map[string][]diffmatchpatch.Diff{},
+			Diffs: map[string][]strdiff.Diff{},
 		}
 
 		close(diffs)

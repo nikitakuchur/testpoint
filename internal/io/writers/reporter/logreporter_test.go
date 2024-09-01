@@ -5,7 +5,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/nikitakuchur/testpoint/internal/comparator"
 	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
-	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/nikitakuchur/testpoint/internal/strdiff"
 	"log"
 	"testing"
 )
@@ -25,12 +25,12 @@ func TestLogReporter_Report(t *testing.T) {
 			Rec2: respreader.RespRecord{
 				ReqUrl: "http://test2.com", ReqMethod: "GET", ReqHeaders: "headers", ReqBody: "body", ReqHash: 123, RespStatus: "404",
 			},
-			Diffs: map[string][]diffmatchpatch.Diff{
+			Diffs: map[string][]strdiff.Diff{
 				"status": {
-					{Type: diffmatchpatch.DiffDelete, Text: "20"},
-					{Type: diffmatchpatch.DiffInsert, Text: "4"},
-					{Type: diffmatchpatch.DiffEqual, Text: "0"},
-					{Type: diffmatchpatch.DiffInsert, Text: "4"},
+					{Operation: strdiff.DiffDelete, Text: "20"},
+					{Operation: strdiff.DiffInsert, Text: "4"},
+					{Operation: strdiff.DiffEqual, Text: "0"},
+					{Operation: strdiff.DiffInsert, Text: "4"},
 				},
 			},
 		}
@@ -51,9 +51,9 @@ func TestLogReporter_Report(t *testing.T) {
 }
 
 func TestLogReporter_shortenDiffs(t *testing.T) {
-	diff := []diffmatchpatch.Diff{
+	diff := []strdiff.Diff{
 		{
-			Type: diffmatchpatch.DiffEqual,
+			Operation: strdiff.DiffEqual,
 			Text: `penetrate
 attract
 elegant
@@ -66,11 +66,11 @@ incredible
 `,
 		},
 		{
-			Type: diffmatchpatch.DiffInsert,
-			Text: "neighbour",
+			Operation: strdiff.DiffInsert,
+			Text:      "neighbour",
 		},
 		{
-			Type: diffmatchpatch.DiffEqual,
+			Operation: strdiff.DiffEqual,
 			Text: `minimum
 midnight
 graphic
@@ -84,11 +84,11 @@ profile
 `,
 		},
 		{
-			Type: diffmatchpatch.DiffDelete,
-			Text: "definite",
+			Operation: strdiff.DiffDelete,
+			Text:      "definite",
 		},
 		{
-			Type: diffmatchpatch.DiffEqual,
+			Operation: strdiff.DiffEqual,
 			Text: `loyalty
 default
 overview
@@ -104,9 +104,9 @@ acquisition`,
 
 	actual := shortenDiff(diff)
 
-	expected := []diffmatchpatch.Diff{
+	expected := []strdiff.Diff{
 		{
-			Type: diffmatchpatch.DiffEqual,
+			Operation: strdiff.DiffEqual,
 			Text: `... // 6 identical lines
 sandwich
 venture
@@ -114,11 +114,11 @@ incredible
 `,
 		},
 		{
-			Type: diffmatchpatch.DiffInsert,
-			Text: "neighbour\n",
+			Operation: strdiff.DiffInsert,
+			Text:      "neighbour\n",
 		},
 		{
-			Type: diffmatchpatch.DiffEqual,
+			Operation: strdiff.DiffEqual,
 			Text: `minimum
 midnight
 graphic
@@ -129,11 +129,11 @@ profile
 `,
 		},
 		{
-			Type: diffmatchpatch.DiffDelete,
-			Text: "definite\n",
+			Operation: strdiff.DiffDelete,
+			Text:      "definite\n",
 		},
 		{
-			Type: diffmatchpatch.DiffEqual,
+			Operation: strdiff.DiffEqual,
 			Text: `loyalty
 default
 overview

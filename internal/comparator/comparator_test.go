@@ -6,8 +6,8 @@ import (
 	"github.com/nikitakuchur/testpoint/internal/comparator"
 	"github.com/nikitakuchur/testpoint/internal/io/readers/respreader"
 	"github.com/nikitakuchur/testpoint/internal/sender"
+	"github.com/nikitakuchur/testpoint/internal/strdiff"
 	testutils "github.com/nikitakuchur/testpoint/internal/utils/testing"
-	"github.com/sergi/go-diff/diffmatchpatch"
 	"testing"
 )
 
@@ -37,20 +37,20 @@ func TestCompareResponses(t *testing.T) {
 		{
 			Rec1: respreader.RespRecord{ReqHash: 1, RespStatus: "200", RespBody: "foo"},
 			Rec2: respreader.RespRecord{ReqHash: 1, RespStatus: "200", RespBody: "bar"},
-			Diffs: map[string][]diffmatchpatch.Diff{
+			Diffs: map[string][]strdiff.Diff{
 				"body": {
-					{Type: diffmatchpatch.DiffDelete, Text: "foo"},
-					{Type: diffmatchpatch.DiffInsert, Text: "bar"},
+					{Operation: strdiff.DiffDelete, Text: "foo"},
+					{Operation: strdiff.DiffInsert, Text: "bar"},
 				},
 			},
 		},
 		{
 			Rec1: respreader.RespRecord{ReqHash: 2, RespStatus: "500", RespBody: "123"},
 			Rec2: respreader.RespRecord{ReqHash: 2, RespStatus: "500", RespBody: "456"},
-			Diffs: map[string][]diffmatchpatch.Diff{
+			Diffs: map[string][]strdiff.Diff{
 				"body": {
-					{Type: diffmatchpatch.DiffDelete, Text: "123"},
-					{Type: diffmatchpatch.DiffInsert, Text: "456"},
+					{Operation: strdiff.DiffDelete, Text: "123"},
+					{Operation: strdiff.DiffInsert, Text: "456"},
 				},
 			},
 		},
@@ -85,10 +85,10 @@ func TestCompareResponsesWithMissingRecords(t *testing.T) {
 		{
 			Rec1: respreader.RespRecord{ReqHash: 1, RespStatus: "200", RespBody: "foo"},
 			Rec2: respreader.RespRecord{ReqHash: 1, RespStatus: "200", RespBody: "bar"},
-			Diffs: map[string][]diffmatchpatch.Diff{
+			Diffs: map[string][]strdiff.Diff{
 				"body": {
-					{Type: diffmatchpatch.DiffDelete, Text: "foo"},
-					{Type: diffmatchpatch.DiffInsert, Text: "bar"},
+					{Operation: strdiff.DiffDelete, Text: "foo"},
+					{Operation: strdiff.DiffInsert, Text: "bar"},
 				},
 			},
 		},
@@ -102,7 +102,7 @@ func TestCompareResponsesWithMissingRecords(t *testing.T) {
 type ErrorRespComparator struct {
 }
 
-func (ErrorRespComparator) Compare(_, _ sender.Response) (map[string][]diffmatchpatch.Diff, error) {
+func (ErrorRespComparator) Compare(_, _ sender.Response) (map[string][]strdiff.Diff, error) {
 	return nil, errors.New("error")
 }
 

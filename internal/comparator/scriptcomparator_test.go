@@ -4,7 +4,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/nikitakuchur/testpoint/internal/comparator"
 	"github.com/nikitakuchur/testpoint/internal/sender"
-	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/nikitakuchur/testpoint/internal/strdiff"
 	"testing"
 )
 
@@ -28,10 +28,10 @@ function compare(resp1, resp2) {
 
 	actual, _ := comp.Compare(rec1, rec2)
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"status": {
-			{Type: diffmatchpatch.DiffDelete, Text: "200"},
-			{Type: diffmatchpatch.DiffInsert, Text: "404"},
+			{Operation: strdiff.DiffDelete, Text: "200"},
+			{Operation: strdiff.DiffInsert, Text: "404"},
 		},
 	}
 
@@ -60,12 +60,12 @@ function compare(resp1, resp2) {
 
 	actual, _ := comp.Compare(rec1, rec2)
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"body": {
-			{Type: diffmatchpatch.DiffEqual, Text: "{\n"},
-			{Type: diffmatchpatch.DiffDelete, Text: "  \"testValue1\": \"foo\",\n"},
-			{Type: diffmatchpatch.DiffInsert, Text: "  \"testValue1\": \"bar\",\n"},
-			{Type: diffmatchpatch.DiffEqual, Text: "  \"testValue2\": \"test\"\n}"},
+			{Operation: strdiff.DiffEqual, Text: "{\n"},
+			{Operation: strdiff.DiffDelete, Text: "  \"testValue1\": \"foo\",\n"},
+			{Operation: strdiff.DiffInsert, Text: "  \"testValue1\": \"bar\",\n"},
+			{Operation: strdiff.DiffEqual, Text: "  \"testValue2\": \"test\"\n}"},
 		},
 	}
 
@@ -97,21 +97,21 @@ function compare(resp1, resp2) {
 
 	actual, _ := comp.Compare(rec1, rec2)
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"body.testValue1": {
-			{Type: diffmatchpatch.DiffEqual, Text: "{\n  \"value1\": \"123\",\n"},
-			{Type: diffmatchpatch.DiffDelete, Text: "  \"value2\": \"456\",\n  \"value3\": \"789\"\n"},
-			{Type: diffmatchpatch.DiffInsert, Text: "  \"value2\": \"456\"\n"},
-			{Type: diffmatchpatch.DiffEqual, Text: "}"},
+			{Operation: strdiff.DiffEqual, Text: "{\n  \"value1\": \"123\",\n"},
+			{Operation: strdiff.DiffDelete, Text: "  \"value2\": \"456\",\n  \"value3\": \"789\"\n"},
+			{Operation: strdiff.DiffInsert, Text: "  \"value2\": \"456\"\n"},
+			{Operation: strdiff.DiffEqual, Text: "}"},
 		},
 		"body.testValue2": {
-			{Type: diffmatchpatch.DiffEqual, Text: "[\n"},
-			{Type: diffmatchpatch.DiffDelete, Text: "  1,\n"},
-			{Type: diffmatchpatch.DiffInsert, Text: "  3,\n"},
-			{Type: diffmatchpatch.DiffEqual, Text: "  2,\n"},
-			{Type: diffmatchpatch.DiffDelete, Text: "  3\n"},
-			{Type: diffmatchpatch.DiffInsert, Text: "  1\n"},
-			{Type: diffmatchpatch.DiffEqual, Text: "]"},
+			{Operation: strdiff.DiffEqual, Text: "[\n"},
+			{Operation: strdiff.DiffDelete, Text: "  1,\n"},
+			{Operation: strdiff.DiffInsert, Text: "  3,\n"},
+			{Operation: strdiff.DiffEqual, Text: "  2,\n"},
+			{Operation: strdiff.DiffDelete, Text: "  3\n"},
+			{Operation: strdiff.DiffInsert, Text: "  1\n"},
+			{Operation: strdiff.DiffEqual, Text: "]"},
 		},
 	}
 
@@ -147,10 +147,10 @@ function compare(resp1, resp2) {
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"status": {
-			{Type: diffmatchpatch.DiffDelete, Text: `"123"`},
-			{Type: diffmatchpatch.DiffInsert, Text: "123"},
+			{Operation: strdiff.DiffDelete, Text: `"123"`},
+			{Operation: strdiff.DiffInsert, Text: "123"},
 		},
 	}
 
@@ -170,10 +170,10 @@ function compare(resp1, resp2) {
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"test": {
-			{Type: diffmatchpatch.DiffDelete, Text: "\"123\""},
-			{Type: diffmatchpatch.DiffInsert, Text: "null"},
+			{Operation: strdiff.DiffDelete, Text: "\"123\""},
+			{Operation: strdiff.DiffInsert, Text: "null"},
 		},
 	}
 
@@ -193,10 +193,10 @@ function compare(resp1, resp2) {
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"test": {
-			{Type: diffmatchpatch.DiffDelete, Text: "\"123\""},
-			{Type: diffmatchpatch.DiffInsert, Text: "null"},
+			{Operation: strdiff.DiffDelete, Text: "\"123\""},
+			{Operation: strdiff.DiffInsert, Text: "null"},
 		},
 	}
 
@@ -222,12 +222,12 @@ function compare(resp1, resp2) {
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"objects": {
-			{Type: diffmatchpatch.DiffEqual, Text: "{\n"},
-			{Type: diffmatchpatch.DiffDelete, Text: "  \"test\": \"123\"\n"},
-			{Type: diffmatchpatch.DiffInsert, Text: "  \"test\": \"456\"\n"},
-			{Type: diffmatchpatch.DiffEqual, Text: "}"},
+			{Operation: strdiff.DiffEqual, Text: "{\n"},
+			{Operation: strdiff.DiffDelete, Text: "  \"test\": \"123\"\n"},
+			{Operation: strdiff.DiffInsert, Text: "  \"test\": \"456\"\n"},
+			{Operation: strdiff.DiffEqual, Text: "}"},
 		},
 	}
 
@@ -249,12 +249,12 @@ function compare(resp1, resp2) {
 
 	actual, _ := comp.Compare(sender.Response{}, sender.Response{})
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"arrays": {
-			{Type: diffmatchpatch.DiffEqual, Text: "[\n  1,\n"},
-			{Type: diffmatchpatch.DiffDelete, Text: "  2,\n"},
-			{Type: diffmatchpatch.DiffInsert, Text: "  0,\n"},
-			{Type: diffmatchpatch.DiffEqual, Text: "  3,\n  4,\n  5,\n  6\n]"},
+			{Operation: strdiff.DiffEqual, Text: "[\n  1,\n"},
+			{Operation: strdiff.DiffDelete, Text: "  2,\n"},
+			{Operation: strdiff.DiffInsert, Text: "  0,\n"},
+			{Operation: strdiff.DiffEqual, Text: "  3,\n  4,\n  5,\n  6\n]"},
 		},
 	}
 

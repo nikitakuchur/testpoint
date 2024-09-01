@@ -4,7 +4,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/nikitakuchur/testpoint/internal/comparator"
 	"github.com/nikitakuchur/testpoint/internal/sender"
-	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/nikitakuchur/testpoint/internal/strdiff"
 	"testing"
 )
 
@@ -21,12 +21,12 @@ func TestDefaultRespComparatorWithJsonBody(t *testing.T) {
 
 	actual, _ := comp.Compare(rec1, rec2)
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"body": {
-			{Type: diffmatchpatch.DiffEqual, Text: "{\n"},
-			{Type: diffmatchpatch.DiffDelete, Text: "  \"testValue1\": \"foo\",\n"},
-			{Type: diffmatchpatch.DiffInsert, Text: "  \"testValue1\": \"bar\",\n"},
-			{Type: diffmatchpatch.DiffEqual, Text: "  \"testValue2\": \"test\"\n}"},
+			{Operation: strdiff.DiffEqual, Text: "{\n"},
+			{Operation: strdiff.DiffDelete, Text: "  \"testValue1\": \"foo\",\n"},
+			{Operation: strdiff.DiffInsert, Text: "  \"testValue1\": \"bar\",\n"},
+			{Operation: strdiff.DiffEqual, Text: "  \"testValue2\": \"test\"\n}"},
 		},
 	}
 
@@ -48,10 +48,10 @@ func TestDefaultRespComparatorWithTextBody(t *testing.T) {
 
 	actual, _ := comp.Compare(rec1, rec2)
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"body": {
-			{Type: diffmatchpatch.DiffDelete, Text: "foo"},
-			{Type: diffmatchpatch.DiffInsert, Text: "bar"},
+			{Operation: strdiff.DiffDelete, Text: "foo"},
+			{Operation: strdiff.DiffInsert, Text: "bar"},
 		},
 	}
 
@@ -73,10 +73,10 @@ func TestDefaultRespComparatorWithDifferentStatuses(t *testing.T) {
 
 	actual, _ := comp.Compare(rec1, rec2)
 
-	expected := map[string][]diffmatchpatch.Diff{
+	expected := map[string][]strdiff.Diff{
 		"status": {
-			{Type: diffmatchpatch.DiffDelete, Text: "200"},
-			{Type: diffmatchpatch.DiffInsert, Text: "404"},
+			{Operation: strdiff.DiffDelete, Text: "200"},
+			{Operation: strdiff.DiffInsert, Text: "404"},
 		},
 	}
 

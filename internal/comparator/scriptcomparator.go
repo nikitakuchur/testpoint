@@ -4,10 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dop251/goja"
-	"github.com/nikitakuchur/testpoint/internal/diff"
 	"github.com/nikitakuchur/testpoint/internal/sender"
+	"github.com/nikitakuchur/testpoint/internal/strdiff"
 	jsonutils "github.com/nikitakuchur/testpoint/internal/utils/json"
-	"github.com/sergi/go-diff/diffmatchpatch"
 	"reflect"
 	"sync"
 )
@@ -45,7 +44,7 @@ func NewScriptComparator(script string, ignoreOrder bool) (ScriptComparator, err
 	return ScriptComparator{vm, compare, ignoreOrder, sync.Mutex{}}, nil
 }
 
-func (c *ScriptComparator) Compare(x, y sender.Response) (map[string][]diffmatchpatch.Diff, error) {
+func (c *ScriptComparator) Compare(x, y sender.Response) (map[string][]strdiff.Diff, error) {
 	c.mu.Lock()
 	// goja is not thread safe, so we have to lock this piece of code
 	result, err := c.compare(goja.Undefined(), c.runtime.ToValue(x), c.runtime.ToValue(y))
@@ -57,7 +56,7 @@ func (c *ScriptComparator) Compare(x, y sender.Response) (map[string][]diffmatch
 
 	compDefs := c.extractComparisonDefinitions(result)
 
-	diffs := make(map[string][]diffmatchpatch.Diff)
+	diffs := make(map[string][]strdiff.Diff)
 	for k, v := range compDefs {
 		if d := jsDiff(v.x, v.y, v.ignoreOrder, v.exclude); len(d) != 0 {
 			diffs[k] = d
@@ -92,19 +91,19 @@ func (c *ScriptComparator) extractComparisonDefinitions(v goja.Value) map[string
 	return defs
 }
 
-func jsDiff(x, y any, ignoreOrder bool, exclude []string) []diffmatchpatch.Diff {
+func jsDiff(x, y any, ignoreOrder bool, exclude []string) []strdiff.Diff {
 	if x != nil && y != nil && reflect.TypeOf(x).Kind() == reflect.String && reflect.TypeOf(y).Kind() == reflect.String {
 		json1 := jsonutils.ReformatJson(x.(string), ignoreOrder, exclude)
 		json2 := jsonutils.ReformatJson(y.(string), ignoreOrder, exclude)
 		if json1 != json2 {
-			return diff.Diff(json1, json2)
+			return strdiff.CalculateLineDiff(json1, json2)
 		}
 		return nil
 	}
 	json1 := jsonutils.ToJson(x, ignoreOrder, exclude)
 	json2 := jsonutils.ToJson(y, ignoreOrder, exclude)
 	if json1 != json2 {
-		return diff.Diff(json1, json2)
+		return strdiff.CalculateLineDiff(json1, json2)
 	}
 	return nil
 }

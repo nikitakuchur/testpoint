@@ -1,11 +1,10 @@
 module github.com/nikitakuchur/testpoint
 
-go 1.22
+go 1.23
 
 require (
 	github.com/dop251/goja v0.0.0-20240627195025-eb1f15ee67d2
 	github.com/google/go-cmp v0.6.0
-	github.com/sergi/go-diff v1.3.1
 	github.com/spf13/cobra v1.8.1
 )
 
