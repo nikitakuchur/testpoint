@@ -37,12 +37,18 @@ type RequestResponse struct {
 	Response Response
 }
 
+type Sender struct {
+	client *http.Client
+}
+
+func NewSender() Sender {
+	return Sender{&http.Client{}}
+}
+
 // SendRequests takes requests from the input channel, sends them to
 // the corresponding endpoint, and puts the result in the output channel.
-func SendRequests(input <-chan Request, workers int) <-chan RequestResponse {
+func (s Sender) SendRequests(input <-chan Request, workers int) <-chan RequestResponse {
 	output := make(chan RequestResponse)
-
-	client := &http.Client{}
 
 	var wg sync.WaitGroup
 	for i := 0; i < workers; i++ {
@@ -51,7 +57,7 @@ func SendRequests(input <-chan Request, workers int) <-chan RequestResponse {
 			defer wg.Done()
 
 			for req := range input {
-				resp, err := sendRequest(client, req)
+				resp, err := s.sendRequest(req)
 				if err != nil {
 					log.Printf("%v: %v, request was skipped", req, err)
 					continue
@@ -70,7 +76,7 @@ func SendRequests(input <-chan Request, workers int) <-chan RequestResponse {
 	return output
 }
 
-func sendRequest(client *http.Client, req Request) (Response, error) {
+func (s Sender) sendRequest(req Request) (Response, error) {
 	httpReq, err := http.NewRequest(req.Method, req.Url, strings.NewReader(req.Body))
 	if err != nil {
 		return Response{}, fmt.Errorf("cannot create an http request: %w", err)
@@ -87,7 +93,7 @@ func sendRequest(client *http.Client, req Request) (Response, error) {
 		}
 	}
 
-	resp, err := doRequest(client, httpReq, 5)
+	resp, err := s.doRequest(httpReq, 5)
 	if err != nil {
 		return Response{}, err
 	}
@@ -102,9 +108,9 @@ func sendRequest(client *http.Client, req Request) (Response, error) {
 	return Response{status, string(body)}, nil
 }
 
-func doRequest(client *http.Client, req *http.Request, retries int) (*http.Response, error) {
+func (s Sender) doRequest(req *http.Request, retries int) (*http.Response, error) {
 	for i := 0; i < retries; i++ {
-		resp, err := client.Do(req)
+		resp, err := s.client.Do(req)
 		if err != nil {
 			log.Printf("%v, retry attempt=%v", err, i+1)
 			time.Sleep(2 * time.Second)

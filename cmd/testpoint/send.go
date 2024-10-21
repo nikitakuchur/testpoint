@@ -56,7 +56,10 @@ func newSendCmd() *cobra.Command {
 			records := reqreader.ReadRequests(conf.input, !conf.noHeader, conf.numRequests)
 			records = filter.Filter(records)
 			requests := transformer.TransformRequests(conf.urls, records, createReqTransformation(conf.transformation))
-			responses := sender.SendRequests(requests, conf.workers)
+
+			s := sender.NewSender()
+			responses := s.SendRequests(requests, conf.workers)
+
 			respwriter.WriteResponses(responses, conf.outputDir)
 
 			log.Printf("the result was saved in %v", conf.outputDir)
