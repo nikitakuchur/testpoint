@@ -13,7 +13,8 @@ func TestSendRequestsWithNoRequests(t *testing.T) {
 	requests := make(chan sender.Request)
 	close(requests)
 
-	responses := sender.SendRequests(requests, 1)
+	s := sender.NewSender()
+	responses := s.SendRequests(requests, 1)
 
 	actual := chanToSlice(responses)
 
@@ -32,7 +33,8 @@ func TestSendRequestsWithZeroWorkers(t *testing.T) {
 		close(requests)
 	}()
 
-	responses := sender.SendRequests(requests, 0)
+	s := sender.NewSender()
+	responses := s.SendRequests(requests, 0)
 
 	actual := chanToSlice(responses)
 
@@ -61,7 +63,8 @@ func TestSendRequests(t *testing.T) {
 		close(requests)
 	}()
 
-	responses := sender.SendRequests(requests, 1)
+	s := sender.NewSender()
+	responses := s.SendRequests(requests, 1)
 
 	actual := chanToSlice(responses)
 
@@ -90,7 +93,8 @@ func TestSendRequestsWithIncorrectRequest(t *testing.T) {
 		close(requests)
 	}()
 
-	responses := sender.SendRequests(requests, 1)
+	s := sender.NewSender()
+	responses := s.SendRequests(requests, 1)
 
 	actual := chanToSlice(responses)
 
@@ -110,7 +114,8 @@ func TestSendRequestsWithIncorrectHeaders(t *testing.T) {
 		close(requests)
 	}()
 
-	responses := sender.SendRequests(requests, 1)
+	s := sender.NewSender()
+	responses := s.SendRequests(requests, 1)
 
 	actual := chanToSlice(responses)
 
